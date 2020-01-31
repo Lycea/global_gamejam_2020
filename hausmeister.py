@@ -14,16 +14,19 @@ TILE_H = 16
 FULLSCREEN = False
 
 
+
+
 def load_level(path):
     file =io.open(path,"r")
     lvl =file.read().replace("/","").splitlines()
     file.close()
     
+
+    
     return lvl
     
 
 
-    
 
 
 pygame.display.init()
@@ -46,6 +49,7 @@ level = ['                    ',
          '####################'
          ]
 
+entities =[]
 
 level =load_level("./lvl/001.lvl")
 print(level)
@@ -77,7 +81,11 @@ def toggleFullscreen():
     window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
 
 
-class Player():
+
+
+
+
+class GameObject():
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -125,6 +133,8 @@ class Player():
         #self.ydir = 0
         
     def update(self):
+        updated = False
+
         newx = self.x
         newy = self.y
         
@@ -144,9 +154,85 @@ class Player():
             self.jumpBlocked = False
 
         self.x = newx
+        
+
+
+class Player(GameObject):
+    def __init__(self,x,y):
+        super().__init__(x,y)
+
+
+class Rat(GameObject):
+    def __init__(self,x,y):
+        super().__init__(x,y)
+        self.tile = "R"
+
+class Spider(GameObject):
+    def __init__(self,x,y):
+        super().__init__(x,y)
+        self.dir = "down"
+        self.tile = "S"
+
+        self.wait_frames = 0
+
+        self.speed = 0.1
+
+    def update(self):
+        if self.dir == "down":
+            if level[round(self.y+self.speed)][self.x] in [" "]: 
+                self.y+=self.speed
+            else:
+                self.dir = "up"
+                
+        elif self.dir == "up":
+            if level[round(self.y-self.speed)][self.x] in [" "]: 
+                self.y-=self.speed/4
+            else:
+                self.dir = "wait"
+                self.wait_frames = 40
+                
+        elif self.dir ==  "wait":
+            if self.wait_frames == 0 :
+                self.dir= "down"
+            else:
+                self.wait_frames-=1
+
+
+        
 
 
 player = Player(8 * TILE_W, 31 * TILE_H)
+
+def get_entities(level):
+    tmp_entities =[]
+
+    y=0
+    for line in level:
+        x=0
+        for char in line:
+            
+            if char == "R":
+                tmp_entities.append(Rat(x,y))
+
+                tmp_str =list(level[y])
+                tmp_str[x]=" "
+                level[y]="".join(tmp_str)
+            elif char == "S":
+                tmp_entities.append(Spider(x,y))
+
+                tmp_str =list(level[y])
+                tmp_str[x]=" "
+                level[y]="".join(tmp_str)
+            x+=1
+        
+        y+=1
+    
+    return tmp_entities
+        
+
+
+entities = get_entities(level)
+
 
 def init():
     global player
@@ -203,13 +289,21 @@ def render():
         for x in range(LEV_W):
             tile = level[y][x]
             
-            if tile in tiles:
+            if tile in tiles:                
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
+    for entity in entities:
+        screen.blit(tiles[entity.tile],(entity.x*TILE_W,entity.y*TILE_H-scrolly))
+
     screen.blit(spr_guy, (player.x, player.y - scrolly))
     
+
+
 def update():
     player.update()
+
+    for entity in entities:
+        entity.update()
     
 
 
