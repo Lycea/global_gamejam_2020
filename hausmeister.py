@@ -16,6 +16,8 @@ pygame.display.init()
 window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
 screen = pygame.Surface((SCR_W, SCR_H))
 
+clock = pygame.time.Clock()
+
 
 level = ['                    ',
          '                    ',
@@ -53,11 +55,19 @@ class Player():
         self.x = x
         self.y = y
         
+        self.xdir = 0
+        self.ydir = 0
+        
+        self.speed = 2
+        self.gravity = 2
+        
+        self.jumpBlocked = False
+        
     def moveLeft(self):
-        pass
+        self.xdir = -1
         
     def moveRight(self):
-        pass
+        self.xdir = 1
         
     def moveUp(self):
         pass
@@ -65,14 +75,17 @@ class Player():
     def moveDown(self):
         pass
         
-    def pressFire(self):
-        pass
+    def doJump(self):
+        if not self.jumpBlocked:
+            self.ydir = -4
         
     def stopLeft(self):
-        pass
+        if self.xdir < 0:
+            self.xdir = 0
         
     def stopRight(self):
-        pass
+        if self.xdir > 0:
+            self.xdir = 0
         
     def stopUp(self):
         pass
@@ -80,8 +93,29 @@ class Player():
     def stopDown(self):
         pass
         
-    def releaseFire(self):
-        pass
+    def cancelJump(self):
+        self.ydir = 0
+        
+    def update(self):
+        newx = self.x
+        newy = self.y
+        
+        newx += self.xdir * self.speed
+        newy += (self.ydir + self.gravity) * self.speed
+        
+        if self.ydir < 0:
+            self.ydir += 0.125
+            
+        # collision
+        collx = int((newx - TILE_W / 2) / TILE_W)
+        colly = int((newy +TILE_H-1) / TILE_H)
+        
+        if level[colly][collx] == ' ':
+            self.y = newy
+        else:
+            self.jumpBlocked = False
+
+        self.x = newx
 
 
 player = Player(8 * TILE_W, 9 * TILE_H)
@@ -108,7 +142,7 @@ def controls():
             if e.key == pygame.K_DOWN:
                 player.moveDown()
             if e.key == pygame.K_RCTRL:
-                player.pressFire()
+                player.doJump()
                 
             if e.key == pygame.K_RETURN:
                 mods = pygame.key.get_mods()
@@ -125,11 +159,13 @@ def controls():
             if e.key == pygame.K_DOWN:
                 player.stopDown()
             if e.key == pygame.K_RCTRL:
-                player.releaseFire()
+                player.cancelJump()
                 
     return True
     
 def render():
+    screen.fill((0, 0, 0))
+
     for y in range(LEV_H):
         for x in range(LEV_W):
             tile = level[y][x]
@@ -140,7 +176,7 @@ def render():
     screen.blit(spr_guy, (player.x, player.y))
     
 def update():
-    pass
+    player.update()
     
 
 
@@ -160,6 +196,8 @@ while running:
         running = False
         
     update()
+    
+    clock.tick(60)
 
 
 
