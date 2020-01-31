@@ -37,6 +37,12 @@ LEV_H = len(level)
 
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
+         '-': pygame.image.load('gfx/floor.png'),
+         'D': pygame.image.load('gfx/door.png'),
+         'H': pygame.image.load('gfx/stairs.png'),
+         'L': pygame.image.load('gfx/lamp.png'),
+         'R': pygame.image.load('gfx/rat.png'),
+         'S': pygame.image.load('gfx/spider.png'),
          }
 
 
