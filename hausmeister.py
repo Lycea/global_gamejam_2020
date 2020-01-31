@@ -1,16 +1,30 @@
 import pygame
+import io
 
 
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 1920
-WIN_H = 1080
+WIN_W = 1366
+WIN_H = 768
 
 TILE_W = 16
 TILE_H = 16
 
 FULLSCREEN = False
+
+
+def load_level(path):
+    file =io.open(path,"r")
+    lvl =file.read().replace("/","").splitlines()
+    file.close()
+    
+    return lvl
+    
+
+
+    
+
 
 pygame.display.init()
 window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
@@ -29,11 +43,18 @@ level = ['                    ',
          '                    ',
          '                    ',
          '                    ',
-         '####################',
+         '####################'
          ]
+
+
+level =load_level("./lvl/001.lvl")
+print(level)
+
 
 LEV_W = len(level[0])
 LEV_H = len(level)
+
+
 
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
@@ -125,7 +146,7 @@ class Player():
         self.x = newx
 
 
-player = Player(8 * TILE_W, 9 * TILE_H)
+player = Player(8 * TILE_W, 31 * TILE_H)
 
 def init():
     global player
