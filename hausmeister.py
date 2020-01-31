@@ -67,7 +67,9 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          }
 
 
-spr_guy = pygame.image.load('gfx/guy.png')
+playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
+                 (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
+                 ]
 
 
     
@@ -77,6 +79,13 @@ def toggleFullscreen():
     window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
 
 
+
+LEFT = 0
+RIGHT = 1
+UP = 2
+DOWN = 3
+
+
 class Player():
     def __init__(self, x, y):
         self.x = x
@@ -84,6 +93,7 @@ class Player():
         
         self.xdir = 0
         self.ydir = 0
+        self.facedir = LEFT
         
         self.speed = 2
         self.gravity = 2
@@ -92,9 +102,11 @@ class Player():
         
     def moveLeft(self):
         self.xdir = -1
+        self.facedir = LEFT
         
     def moveRight(self):
         self.xdir = 1
+        self.facedir = RIGHT
         
     def moveUp(self):
         pass
@@ -134,6 +146,12 @@ class Player():
         if self.ydir < 0:
             self.ydir += 0.125
             
+        # collision with screen bounds (left/right)
+        if newx < 0:
+            newx = 0
+        if newx > SCR_W - TILE_W:
+            newx = SCR_W - TILE_W
+            
         # collision
         collx = int((newx - TILE_W / 2) / TILE_W)
         colly = int((newy +TILE_H-1) / TILE_H)
@@ -142,6 +160,7 @@ class Player():
             self.y = newy
         else:
             self.jumpBlocked = False
+            self.y = (colly -1) * TILE_H
 
         self.x = newx
 
@@ -206,18 +225,22 @@ def render():
             if tile in tiles:
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
-    screen.blit(spr_guy, (player.x, player.y - scrolly))
+    spr = playerSprites[player.facedir][int(tick % 20 / 10)]
+    
+    screen.blit(spr, (player.x, player.y - scrolly))
     
 def update():
     player.update()
     
-
-
+    
+tick = 0
 running = True
 
 init()
 
 while running:
+    tick += 1
+    
     render()
     
     pygame.transform.scale(screen, (WIN_W, WIN_H), window)
