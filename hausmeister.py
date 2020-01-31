@@ -62,6 +62,7 @@ LEV_H = len(level)
 
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
+         ' ': pygame.image.load('gfx/background.png'),
          '-': pygame.image.load('gfx/floor.png'),
          'D': pygame.image.load('gfx/door.png'),
          'H': pygame.image.load('gfx/stairs.png'),
@@ -71,7 +72,9 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          }
 
 
-spr_guy = pygame.image.load('gfx/guy.png')
+playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
+                 (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
+                 ]
 
 
     
@@ -82,7 +85,10 @@ def toggleFullscreen():
 
 
 
-
+LEFT = 0
+RIGHT = 1
+UP = 2
+DOWN = 3
 
 
 class GameObject():
@@ -92,6 +98,7 @@ class GameObject():
         
         self.xdir = 0
         self.ydir = 0
+        self.facedir = LEFT
         
         self.speed = 2
         self.gravity = 2
@@ -100,9 +107,11 @@ class GameObject():
         
     def moveLeft(self):
         self.xdir = -1
+        self.facedir = LEFT
         
     def moveRight(self):
         self.xdir = 1
+        self.facedir = RIGHT
         
     def moveUp(self):
         pass
@@ -144,6 +153,12 @@ class GameObject():
         if self.ydir < 0:
             self.ydir += 0.125
             
+        # collision with screen bounds (left/right)
+        if newx < 0:
+            newx = 0
+        if newx > SCR_W - TILE_W:
+            newx = SCR_W - TILE_W
+            
         # collision
         collx = int((newx - TILE_W / 2) / TILE_W)
         colly = int((newy +TILE_H-1) / TILE_H)
@@ -152,6 +167,7 @@ class GameObject():
             self.y = newy
         else:
             self.jumpBlocked = False
+            self.y = (colly -1) * TILE_H
 
         self.x = newx
         
@@ -166,6 +182,9 @@ class Rat(GameObject):
     def __init__(self,x,y):
         super().__init__(x,y)
         self.tile = "R"
+
+    def update(self):
+        pass
 
 class Spider(GameObject):
     def __init__(self,x,y):
@@ -292,10 +311,14 @@ def render():
             if tile in tiles:                
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
+
     for entity in entities:
         screen.blit(tiles[entity.tile],(entity.x*TILE_W,entity.y*TILE_H-scrolly))
 
-    screen.blit(spr_guy, (player.x, player.y - scrolly))
+    
+    spr = playerSprites[player.facedir][int(tick % 20 / 10)]
+    screen.blit(spr, (player.x, player.y - scrolly))
+
     
 
 
@@ -305,13 +328,15 @@ def update():
     for entity in entities:
         entity.update()
     
-
-
+    
+tick = 0
 running = True
 
 init()
 
 while running:
+    tick += 1
+    
     render()
     
     pygame.transform.scale(screen, (WIN_W, WIN_H), window)
