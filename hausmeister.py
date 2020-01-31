@@ -100,7 +100,8 @@ class Player():
         pass
         
     def cancelJump(self):
-        self.ydir = 0
+        pass
+        #self.ydir = 0
         
     def update(self):
         newx = self.x
@@ -171,15 +172,20 @@ def controls():
     
 def render():
     screen.fill((0, 0, 0))
+    
+    scrolly = player.y - SCR_H * 0.75
+    
+    if scrolly > LEV_H * TILE_H:
+        scrolly = LEV_H * TILE_H
 
     for y in range(LEV_H):
         for x in range(LEV_W):
             tile = level[y][x]
             
             if tile in tiles:
-                screen.blit(tiles[tile], (x * TILE_W, y * TILE_H))
+                screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
-    screen.blit(spr_guy, (player.x, player.y))
+    screen.blit(spr_guy, (player.x, player.y - scrolly))
     
 def update():
     player.update()
