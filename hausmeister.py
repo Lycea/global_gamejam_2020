@@ -270,6 +270,7 @@ class Spider(GameObject):
         self.wait_frames = 0
 
         self.speed = 1
+        self.flip = False
 
     def update(self):
         if self.dir == "down":
@@ -296,6 +297,36 @@ class Rat(GameObject):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.tile = "R"
+        self.xdir = -1
+        self.speed = 1.5
+        self.flip = False
+    
+    def update(self):
+        debugList.append((self.x,self.y))
+        
+        
+        x_new = self.x+self.speed*self.xdir
+
+        debugList.append(( round(x_new/TILE_W)*TILE_W,self.y))
+        #check boundaries left and right
+        if x_new >0 and x_new<SCR_W-TILE_W:
+            
+            
+
+            debugList.append((round((x_new+(0.5*self.xdir))/TILE_W)*TILE_W,round(self.y/TILE_H)*TILE_H))
+
+            #check the tile in the walking direction
+            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in[" "]:
+
+                self.x+=(self.speed*self.xdir)
+            else:
+                self.xdir*=-1
+                self.flip= not self.flip
+        else:
+            self.xdir*=-1
+            self.flip= not self.flip
+
+        pass
         
 
 
@@ -429,7 +460,8 @@ def render():
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
-        screen.blit(tiles[entity.tile], (entity.x, entity.y - scrolly))
+        tile = pygame.transform.flip(tiles[entity.tile],entity.flip,False)
+        screen.blit(tile, (entity.x, entity.y - scrolly))
     
     spr = playerSprites[player.facedir][int(tick % 20 / 10)]
     screen.blit(spr, (player.x, player.y - scrolly))
