@@ -17,6 +17,8 @@ FULLSCREEN = False
 
 DEBUG_MODE = False
 
+JOY_DEADZONE = 0.4
+
 
 def load_level(path):
     file =io.open(path,"r")
@@ -31,6 +33,15 @@ window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN
 screen = pygame.Surface((SCR_W, SCR_H))
 
 clock = pygame.time.Clock()
+
+pygame.mixer.init(44100)
+pygame.joystick.init()
+
+for i in range(pygame.joystick.get_count()):
+    pygame.joystick.Joystick(i).init()
+    
+pygame.mouse.set_visible(False)
+
 
 
 level = ['                    ',
@@ -468,6 +479,36 @@ def controls():
             if e.key == pygame.K_F12:
                 global DEBUG_MODE
                 DEBUG_MODE = not DEBUG_MODE
+                
+                
+        if e.type == pygame.JOYAXISMOTION:
+            if e.axis == 0:
+                if e.value < -JOY_DEADZONE:
+                    player.moveLeft()
+                elif e.value > JOY_DEADZONE:
+                    player.moveRight()
+                else:
+                    if player.xdir < 0:
+                        player.stopLeft()
+                    if player.xdir > 0:
+                        player.stopRight()
+                        
+            if e.axis == 1:
+                if e.value < -JOY_DEADZONE:
+                    player.moveUp()
+                elif e.value > JOY_DEADZONE:
+                    player.moveDown()
+                else:
+                    if player.ydir < 0:
+                        player.stopUp()
+                    if player.ydir > 0:
+                        player.stopDown()
+                        
+        if e.type == pygame.JOYBUTTONDOWN:
+            player.doJump()
+            
+        if e.type == pygame.JOYBUTTONUP:
+            player.cancelJump()
                 
     return True
     
