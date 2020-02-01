@@ -699,9 +699,11 @@ def render():
         #collectible.collides(player)
         
         if type(collectible) is RepairPoint:
-            if collectible.item_type is not None:
-                if int(tick % 40 / 20):
-                    screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+            if int(tick % 40 / 20):
+                continue
+                
+        if collectible.item_type is not None:
+                screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
 
 
     for particle in particles:
