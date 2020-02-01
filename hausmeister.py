@@ -190,6 +190,12 @@ class Player(GameObject):
             self.objects.pop()
             self.remove_timer = 25
 
+    def collides_box(self,entity):
+        for box in self.objects:
+            if box.collides(entity):
+                return True
+        return False
+
     def update(self):
         if self.remove_timer >0:
             self.remove_timer-=1
@@ -348,6 +354,17 @@ class Spider(GameObject):
         self.flip = False
 
     def update(self):
+
+        if player.collides(self):
+            player.remove_item()
+            self.dir = "up"
+        elif player.collides_box(self):
+            self.dir = "up"
+            player.remove_item()
+            
+
+
+
         if self.dir == "down":
             if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in [" "]: 
                 self.y+=self.speed
