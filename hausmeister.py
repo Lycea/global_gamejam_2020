@@ -72,9 +72,12 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          }
 
 OBSTACLES = ['#', '-']
+CLIMBABLE = ['H']
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
+                 (pygame.image.load('gfx/player_up_1.png'), pygame.image.load('gfx/player_up_2.png')),
+                 (pygame.image.load('gfx/player_down_1.png'), pygame.image.load('gfx/player_down_2.png')),
                  ]
 
 debugSprite = pygame.image.load('gfx/debug.png')
@@ -116,10 +119,12 @@ class GameObject():
         self.facedir = RIGHT
         
     def moveUp(self):
-        pass
+        self.ydir = -1
+        self.facedir = UP
         
     def moveDown(self):
-        pass
+        self.ydir = 1
+        self.facedir = DOWN
         
     def doJump(self):
         if not self.jumpBlocked:
@@ -152,6 +157,8 @@ class Player(GameObject):
     def __init__(self, x, y):
         super().__init__(x, y)
         
+        self.climb = False
+        
     def update(self):
             
         # horizontal collision
@@ -160,7 +167,7 @@ class Player(GameObject):
         newydir = self.ydir * self.speed
 
         newx = self.x + newxdir
-        newy = self.y# + newydir
+        newy = self.y
         
         x1 = int(newx / TILE_W)
         x2 = int((newx + TILE_W -1) / TILE_W)
@@ -208,11 +215,17 @@ class Player(GameObject):
         self.x = newx
         
         # vertical collision
+        
+        
+        if self.climb:
+            gravity = 0
+        else:
+            gravity = self.gravity
 
         newxdir = self.xdir * self.speed
-        newydir = self.ydir * self.speed + self.gravity
+        newydir = self.ydir * self.speed + gravity
 
-        newx = self.x# + newxdir
+        newx = self.x
         newy = self.y + newydir
         
         x1 = int(newx / TILE_W)
@@ -230,7 +243,7 @@ class Player(GameObject):
         debugList.append((x1 * TILE_W, y2 * TILE_H))
         debugList.append((x2 * TILE_W, y2 * TILE_H))
 
-        if self.ydir + self.gravity < 0:
+        if self.ydir + gravity < 0:
             if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
             elif colltile1 in OBSTACLES and colltile2 not in OBSTACLES:
@@ -239,7 +252,7 @@ class Player(GameObject):
             elif colltile1 not in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
                 #newxdir = -SPEED
-        elif self.ydir + self.gravity > 0:
+        elif self.ydir + gravity > 0:
             if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
@@ -254,7 +267,14 @@ class Player(GameObject):
 
         self.y += newydir
         
+        # climb
         
+        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+            if self.ydir != 0:
+                self.climb = True
+        else:
+            self.climb = False
+            
         # jump
         
         if self.ydir < 0:
