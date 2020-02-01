@@ -198,12 +198,12 @@ class Player(GameObject):
 
     def remove_item(self):
         if len(self.objects)>0  and self.remove_timer == 0:
-            self.objects.pop()
+            o = self.objects.pop()
             self.remove_timer = 25
             
-            return True
+            return o
             
-        return False
+        return None
 
     def collides_box(self,entity):
         for box in self.objects:
@@ -411,9 +411,11 @@ class Rat(GameObject):
     
     def update(self):
         if player.collides(self):
-            if player.remove_item():
+            o = player.remove_item()
+            
+            if o is not None:
                 global particles
-                p = Particle(player.x, player.y - TILE_H, 'BOX')
+                p = Particle(player.x, player.y - TILE_H, o.item_type)
                 particles.append(p)
 
 
