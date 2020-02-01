@@ -17,6 +17,8 @@ FULLSCREEN = False
 
 DEBUG_MODE = False
 
+JOY_DEADZONE = 0.4
+
 
 def load_level(path):
     file =io.open(path,"r")
@@ -31,6 +33,15 @@ window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN
 screen = pygame.Surface((SCR_W, SCR_H))
 
 clock = pygame.time.Clock()
+
+pygame.mixer.init(44100)
+pygame.joystick.init()
+
+for i in range(pygame.joystick.get_count()):
+    pygame.joystick.Joystick(i).init()
+    
+pygame.mouse.set_visible(False)
+
 
 
 level = ['                    ',
@@ -129,7 +140,7 @@ class GameObject():
         self.ydir = 1
         
     def doJump(self):
-        if not self.jumpBlocked and not self.climb:
+        if not self.jumpBlocked:# and not self.climb:
             self.ydir = -4
             self.jumpBlocked = True
             self.jump = True
@@ -276,10 +287,6 @@ class Player(GameObject):
         #debugList.append((x1 * TILE_W, y2 * TILE_H))
         #debugList.append((x2 * TILE_W, y2 * TILE_H))
         
-        # HACK
-        if not self.climb:
-            OBSTACLES.append('H')
-
         if self.ydir + gravity < 0:
             if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
@@ -290,17 +297,25 @@ class Player(GameObject):
                 newydir = 0
                 newxdir = -1
         elif self.ydir + gravity > 0:
-            if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-            elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-                newxdir = 1
-            elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-                newxdir = -1
+            self.jumpBlocked = True
+        
+            # check if player stands on top of ladder
+            if colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+                if self.ydir == 0:
+                    newydir = 0         # defy gravity
+                    self.jumpBlocked = False
+            else:
+                if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                    newxdir = 1
+                elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                    newxdir = -1
 
         self.y += newydir
         
@@ -313,22 +328,19 @@ class Player(GameObject):
             newx = SCR_W - TILE_W -self.speed
 
         self.x = newx
-
-        # HACK
-        if not self.climb:
-            OBSTACLES.remove('H')
         
         # climb
-        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
-            if self.ydir != 0:
-                self.climb = True
-                
-                if self.ydir < 0:
-                    self.facedir = UP
-                elif self.ydir > 0:
-                    self.facedir = DOWN
-        else:
-            self.climb = False
+        if not self.jump:
+            if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+                if self.ydir != 0:
+                    self.climb = True
+                    
+                    if self.ydir < 0:
+                        self.facedir = UP
+                    elif self.ydir > 0:
+                        self.facedir = DOWN
+            else:
+                self.climb = False
             
         if not self.climb and not self.jump:
             if self.ydir < 0:
@@ -547,6 +559,38 @@ def controls():
             if e.key == pygame.K_F12:
                 global DEBUG_MODE
                 DEBUG_MODE = not DEBUG_MODE
+                
+                
+        if e.type == pygame.JOYAXISMOTION:
+            if e.axis == 0:
+                if e.value < -JOY_DEADZONE:
+                    player.moveLeft()
+                elif e.value > JOY_DEADZONE:
+                    player.moveRight()
+                else:
+                    if player.xdir < 0:
+                        player.stopLeft()
+                    if player.xdir > 0:
+                        player.stopRight()
+                        
+            if e.axis == 1:
+                if e.value < -JOY_DEADZONE:
+                    player.moveUp()
+                elif e.value > JOY_DEADZONE:
+                    player.moveDown()
+                else:
+                    if player.ydir < 0:
+                        player.stopUp()
+                    if player.ydir > 0:
+                        player.stopDown()
+                        
+        if e.type == pygame.JOYBUTTONDOWN:
+            if e.button == 0:
+                player.doJump()
+            
+        if e.type == pygame.JOYBUTTONUP:
+            if e.button == 0:
+                player.cancelJump()
                 
     return True
     
