@@ -175,6 +175,8 @@ class Player(GameObject):
         
         self.climb = False
         self.objects=[]
+
+        self.remove_timer = 0
     
     def interact(self):
         print("Trying to interact...")
@@ -183,8 +185,15 @@ class Player(GameObject):
                 self.objects.append(Collected(self.x+8,self.y+8))
         pass
 
+    def remove_item(self):
+        if len(self.objects)>0  and self.remove_timer == 0:
+            self.objects.pop()
+            self.remove_timer = 25
+
     def update(self):
-    
+        if self.remove_timer >0:
+            self.remove_timer-=1
+
         if self.xdir < 0:
             self.facedir = LEFT
         elif self.xdir > 0:
@@ -368,6 +377,10 @@ class Rat(GameObject):
         self.flip = False
     
     def update(self):
+        if player.collides(self):
+            player.remove_item()
+
+
         debugList.append((self.x,self.y))
         
         
