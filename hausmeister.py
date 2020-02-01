@@ -70,6 +70,7 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'L': pygame.image.load('gfx/lamp.png'),
          'R': pygame.image.load('gfx/rat.png'),
          'S': pygame.image.load('gfx/spider.png'),
+         "BOX":pygame.image.load('gfx/box.png')
          }
 
 OBSTACLES = ['#', '-', '=']
@@ -111,6 +112,9 @@ class GameObject():
         
         self.jump = False
         self.jumpBlocked = False
+
+        self.width = TILE_W
+        self.height = TILE_H
         
     def moveLeft(self):
         self.xdir = -1
@@ -151,14 +155,34 @@ class GameObject():
         
     def update(self):
         pass
-        
+
+    def interact(self):
+        pass
+
+    def collides(self,game_object):
+        if self.x >= game_object.x-game_object.width and self.x <= game_object.x +game_object.width  and \
+           self.y >= game_object.y-game_object.height and self.y <= game_object.y +game_object.height:
+
+           debugList.append([self.x,self.y])
+           debugList.append([game_object.x,game_object.y])
+
+           return True
+        return False        
         
 class Player(GameObject):
     def __init__(self, x, y):
         super().__init__(x, y)
         
         self.climb = False
-        
+        self.objects=[]
+    
+    def interact(self):
+        print("Trying to interact...")
+        for collectible in collectibles:
+            if collectible.collides(self):
+                self.objects.append(Collected(self.x+8,self.y+8))
+        pass
+
     def update(self):
     
         if self.xdir < 0:
@@ -185,10 +209,10 @@ class Player(GameObject):
         colltile4 = level[y2][x2]  # lower right
 
         global debugList
-        debugList.append((x1 * TILE_W, y1 * TILE_H))
-        debugList.append((x2 * TILE_W, y1 * TILE_H))
-        debugList.append((x1 * TILE_W, y2 * TILE_H))
-        debugList.append((x2 * TILE_W, y2 * TILE_H))
+        #debugList.append((x1 * TILE_W, y1 * TILE_H))
+        #debugList.append((x2 * TILE_W, y1 * TILE_H))
+        #debugList.append((x1 * TILE_W, y2 * TILE_H))
+        #debugList.append((x2 * TILE_W, y2 * TILE_H))
 
         if self.xdir < 0:
             if colltile1 in OBSTACLES and colltile3 in OBSTACLES:
@@ -232,10 +256,10 @@ class Player(GameObject):
         colltile3 = level[y2][x1]  # lower left
         colltile4 = level[y2][x2]  # lower right
 
-        debugList.append((x1 * TILE_W, y1 * TILE_H))
-        debugList.append((x2 * TILE_W, y1 * TILE_H))
-        debugList.append((x1 * TILE_W, y2 * TILE_H))
-        debugList.append((x2 * TILE_W, y2 * TILE_H))
+        #debugList.append((x1 * TILE_W, y1 * TILE_H))
+        #debugList.append((x2 * TILE_W, y1 * TILE_H))
+        #debugList.append((x1 * TILE_W, y2 * TILE_H))
+        #debugList.append((x2 * TILE_W, y2 * TILE_H))
         
         # HACK
         if not self.climb:
@@ -369,11 +393,29 @@ class Rat(GameObject):
             self.flip= not self.flip
 
         pass
+
+class Collectible(GameObject):
+    def __init__(self,x,y):
+        super().__init__(x,y)
+        self.stack_size = 0
+        self.item_type = "BOX"
         
+
+class Collected(GameObject):
+    def __init__(self,x,y,item_type=None):
+        super().__init__(x,y)
+
+        self.item_type = item_type or "BOX"
+
+        self.width = 8
+        self.height = 8
+        
+
 
 
 def get_entities(level):
     tmp_entities =[]
+    tmp_objects = []
 
     y=0
     for line in level:
@@ -398,16 +440,21 @@ def get_entities(level):
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
+            elif char == "O":
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H))
                 
+                tmp_str =list(level[y])
+                tmp_str[x]=" "
+                level[y]="".join(tmp_str)
             x+=1
         
         y+=1
     
-    return tmp_entities
+    return tmp_entities,tmp_objects
         
 
 
-entities = get_entities(level)
+entities ,collectibles = get_entities(level)
 
 for e in entities:
     if type(e) is Player:
@@ -428,7 +475,10 @@ def controls():
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_ESCAPE:
                 return False
-                
+            
+            if e.key == pygame.K_a:
+                player.interact()
+
             if e.key == pygame.K_LEFT:
                 player.moveLeft()
             if e.key == pygame.K_RIGHT:
@@ -504,8 +554,23 @@ def render():
     for entity in entities:
         tile = pygame.transform.flip(tiles[entity.tile],entity.flip,False)
         screen.blit(tile, (entity.x, entity.y - scrolly))
+
+    for collectible in collectibles:
+        #collectible.collides(player)
+        screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+
+
+    anim_frame = int(tick % 20 / 10)
+    for collected_num in range(len(player.objects)):
+        player.objects[collected_num].x = player.x +4
+        player.objects[collected_num].y = player.y - player.objects[collected_num].height*(collected_num+1)
+
+
+        scaled_sprite = pygame.transform.scale(tiles[player.objects[collected_num].item_type],(8,8))
+        screen.blit(scaled_sprite,(player.objects[collected_num].x  ,player.objects[collected_num].y-scrolly+anim_frame))
+
     
-    spr = playerSprites[player.facedir][int(tick % 20 / 10)]
+    spr = playerSprites[player.facedir][anim_frame]
     screen.blit(spr, (player.x, player.y - scrolly))
 
     if DEBUG_MODE:
@@ -520,6 +585,9 @@ def update():
 
     for entity in entities:
         entity.update()
+
+    for collectible in collectibles:
+        collectible.collides(player)
     
     
 tick = 0
