@@ -2,12 +2,14 @@ import pygame
 import io
 import random
 
+from bitmapfont import BitmapFont
+
 
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 1366
-WIN_H = 768
+WIN_W = 1920
+WIN_H = 1080
 
 TILE_W = 16
 TILE_H = 16
@@ -21,6 +23,7 @@ DEBUG_MODE = False
 JOY_DEADZONE = 0.4
 
 NUM_TOOLS = 9
+
 
 
 def load_level(path):
@@ -45,6 +48,7 @@ for i in range(pygame.joystick.get_count()):
     
 pygame.mouse.set_visible(False)
 
+font = BitmapFont('gfx/heimatfont.png', scr_w=SCR_W, scr_h=SCR_H, colors=[(255,255,255), (240,0,240)])
 
 
 level = ['                    ',
@@ -773,6 +777,8 @@ def render():
             screen.blit(debugSprite, (x, y - scrolly))
         
     debugList = []
+    
+    font.drawText(screen, 'HORROR HOTEL HAUSMEISTER', 0, 0, fgcolor=(255,255,255), bgcolor=(0,0,0))
 
 
 def update():
