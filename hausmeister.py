@@ -246,9 +246,9 @@ class Player(GameObject):
                 
         pass
 
-    def remove_item(self):
+    def remove_item(self,idx=-1):
         if len(self.objects)>0  and self.remove_timer == 0:
-            o = self.objects.pop()
+            o = self.objects.pop(idx)
             self.remove_timer = 25
             
             return o
@@ -257,9 +257,9 @@ class Player(GameObject):
 
     def collides_box(self,entity):
         for box in self.objects:
-            if box.collides(entity):
-                return True
-        return False
+            if box.collides(entity) != False:
+                return (True,self.objects.index(box))
+        return (False,None)
 
     def update(self):
         if self.remove_timer >0:
@@ -439,13 +439,26 @@ class Spider(GameObject):
     def update(self):
 
         if player.collides(self) and not self.stole_chest:
-            player.remove_item()
+            item =player.remove_item()
             self.dir = "up"
-        elif player.collides_box(self) and not self.stole_chest:
-            self.dir = "up"
-            player.remove_item()
 
-            self.stole_chest = True
+            
+            
+            if item is not None:
+                global particles
+                p = Particle(player.x, player.y - TILE_H, item.item_type)
+                particles.append(p)
+
+
+        else:
+            result = player.collides_box(self)
+            if result[0] and not self.stole_chest:
+                self.dir = "up"
+                item = player.remove_item(result[1])
+
+                if item:
+                    self.stolen_type = item.item_type
+                    self.stole_chest = True
             
 
         
@@ -759,14 +772,15 @@ def render():
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
-        tile = pygame.transform.flip(entity.getSprite(), entity.flip, False)
-        screen.blit(tile, (entity.x, entity.y - scrolly))
-
         if entity.tile == "S":
             pygame.draw.line(screen,(255,255,255),(entity.x+7,entity.y- scrolly),(entity.x+7,(entity.ceil+1)*TILE_H- scrolly))
             if entity.stole_chest:
-                scaled_sprite = pygame.transform.scale(tiles["BOX"],(8,8))
-                screen.blit(scaled_sprite,(entity.x+4  ,entity.y+TILE_H-scrolly))
+                print(entity.stolen_type)
+                scaled_sprite = pygame.transform.scale(tiles[entity.stolen_type],(16,16))
+                screen.blit(scaled_sprite,(entity.x  ,entity.y+TILE_H-scrolly -5))
+        
+        tile = pygame.transform.flip(entity.getSprite(), entity.flip, False)
+        screen.blit(tile, (entity.x, entity.y - scrolly))
 
 
     for collectible in collectibles:
