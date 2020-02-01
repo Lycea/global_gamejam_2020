@@ -502,8 +502,8 @@ class Collected(GameObject):
 
         self.item_type = item_type or "BOX"
 
-        self.width = 12
-        self.height = 12
+        self.width = 16
+        self.height = 16
         
 
 class Particle(GameObject):
@@ -512,8 +512,8 @@ class Particle(GameObject):
 
         self.item_type = item_type or "BOX"
 
-        self.width = 12
-        self.height = 12
+        self.width = 16
+        self.height = 16
         
         self.cnt = 0
         
@@ -748,8 +748,8 @@ def render():
 
     anim_frame = int(tick % 20 / 10)
     for collected_num in range(len(player.objects)):
-        player.objects[collected_num].x = player.x +4
-        player.objects[collected_num].y = player.y - player.objects[collected_num].height*(collected_num+1)
+        player.objects[collected_num].x = player.x
+        player.objects[collected_num].y = player.y - player.objects[collected_num].height*(collected_num+1)*0.75 -4
 
 
         scaled_sprite = pygame.transform.scale(tiles[player.objects[collected_num].item_type],(player.objects[collected_num].width,player.objects[collected_num].height))
