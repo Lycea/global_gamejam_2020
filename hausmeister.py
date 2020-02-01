@@ -583,7 +583,7 @@ class RepairPoint(GameObject):
     def __init__(self,x,y,item_type=None):
         super().__init__(x,y)
         
-        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        self.timer = 1
         self.item_type = None
         self.height = 32
 
@@ -653,7 +653,7 @@ def init():
     setState(STATE_GAME)
     
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/001.lvl")
+    level = load_level("./lvl/002.lvl")
 
     LEV_W = len(level[0])
     LEV_H = len(level)
