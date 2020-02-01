@@ -8,8 +8,8 @@ from bitmapfont import BitmapFont
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 1920
-WIN_H = 1080
+WIN_W = 1366
+WIN_H = 768
 
 TILE_W = 16
 TILE_H = 16
@@ -199,8 +199,10 @@ class GameObject():
         pass
 
     def collides(self,game_object):
-        if self.x >= game_object.x-game_object.width and self.x <= game_object.x +game_object.width  and \
-           self.y >= game_object.y-game_object.height and self.y <= game_object.y +game_object.height:
+        if self.x < game_object.x + game_object.width and \
+            self.x + self.width > game_object.x and \
+            self.y < game_object.y + game_object.height and \
+            self.y + self.height > game_object.y:
 
            debugList.append([self.x,self.y])
            debugList.append([game_object.x,game_object.y])
@@ -552,6 +554,7 @@ class RepairPoint(GameObject):
         
         self.timer = int(random.random() * 20*FPS) + 2*FPS
         self.item_type = None
+        self.height = 32
 
     def update(self):
         self.timer -= 1
