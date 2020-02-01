@@ -25,14 +25,15 @@ JOY_DEADZONE = 0.4
 NUM_TOOLS = 9
 
 
+STATE_GAME = 0
+STATE_GAMEOVER = 1
 
-def load_level(path):
-    file =io.open(path,"r")
-    lvl =file.read().splitlines()
-    file.close()
-    
-    return lvl
-    
+
+state = STATE_GAME
+statecnt = 0
+
+
+
 
 pygame.display.init()
 window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
@@ -64,20 +65,34 @@ level = ['                    ',
          '####################'
          ]
 
-entities =[]
 
-level =load_level("./lvl/001.lvl")
-print(level)
 
+def load_level(path):
+    file =io.open(path,"r")
+    lvl =file.read().splitlines()
+    file.close()
+    
+    return lvl
+
+level = load_level("./lvl/001.lvl")
 
 LEV_W = len(level[0])
 LEV_H = len(level)
 
+entities = []
+collectibles = []
+particles = []
 
 debugList = []
 
 scrolly = 0
 scroll = False
+
+score = 0
+playtime = 90 * FPS
+
+player = None
+
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
@@ -115,6 +130,7 @@ TOOL_ORDER.remove(0)
 
 toolno = 0
 
+
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
                  (pygame.image.load('gfx/player_up_1.png'), pygame.image.load('gfx/player_up_2.png')),
@@ -139,6 +155,7 @@ LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
+
 
 
 class GameObject():
@@ -238,6 +255,8 @@ class Player(GameObject):
                 for collected in self.objects:
                     if collected.item_type == collectible.item_type :
                         print("increasing score")
+                        global score
+                        score += 1
                         print("removing item")
                         self.objects.remove(collected)
                         print("restart quest")
@@ -624,19 +643,49 @@ def get_entities(level):
     return tmp_entities,tmp_objects
         
 
-
-entities ,collectibles = get_entities(level)
-particles = []
-
-for e in entities:
-    if type(e) is Player:
-        player = e
-        entities.remove(e)
-        break
+def setState(s):
+    global state, statecnt
+    state = s
+    statecnt = 0
 
 
 def init():
+    setState(STATE_GAME)
+    
+    global level, LEV_W, LEV_H
+    level = load_level("./lvl/001.lvl")
+
+    LEV_W = len(level[0])
+    LEV_H = len(level)
+    
+    global entities, collectibles, particles
+    entities, collectibles = get_entities(level)
+    particles = []
+    
     global player
+    for e in entities:
+        if type(e) is Player:
+            player = e
+            entities.remove(e)
+            break
+
+    global debugList
+    debugList = []
+
+    global scrolly, scroll
+    scrolly = 0
+    scroll = False
+
+    global score, playtime
+    score = 0
+    playtime = 90 * FPS
+    
+    global TOOL_ORDER, toolno
+    TOOL_ORDER = list(range(NUM_TOOLS +1))
+    random.shuffle(TOOL_ORDER)
+    TOOL_ORDER.remove(0)
+
+    toolno = 0
 
 
 def controls():
@@ -730,6 +779,11 @@ def controls():
 def render():
     screen.fill((0, 0, 0))
     
+    if state == STATE_GAMEOVER:
+        if statecnt > 2 * FPS:
+            font.centerText(screen, 'TIME IS UP', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
+            return
+                
     global scrolly, scroll
     camy = player.y - SCR_H * 0.5
     
@@ -807,11 +861,26 @@ def render():
         
     debugList = []
     
-    font.drawText(screen, 'HORROR HOTEL HAUSMEISTER', 0, 0, fgcolor=(255,255,255), bgcolor=(0,0,0))
+    font.drawText(screen, 'SCORE: %i' % score, 0, 0, fgcolor=(255,255,255))#, bgcolor=(0,0,0))
+    font.drawText(screen, 'TIME: %02i' % (playtime / FPS), 30, 0, fgcolor=(255,255,255))
+
+
+    if state == STATE_GAMEOVER:
+        if int(tick % 20 / 10):
+            font.centerText(screen, 'TIME IS UP', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
 
 
 def update():
-    player.update()
+
+    if state == STATE_GAME:
+        player.update()
+
+        global playtime
+        playtime -= 1
+        
+        if playtime == 0:
+           setState(STATE_GAMEOVER)
+            
 
     for entity in entities:
         entity.update()
@@ -829,7 +898,7 @@ def update():
             
     for particle in removeParticles:
         particles.remove(particle)
-    
+        
     
 tick = 0
 running = True
@@ -851,6 +920,12 @@ while running:
         
     update()
     
+    statecnt += 1
+
+    if state == STATE_GAMEOVER:
+        if statecnt == 3 * FPS:
+            init()
+            
     clock.tick(FPS)
 
 
