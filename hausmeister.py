@@ -220,8 +220,19 @@ class Player(GameObject):
     def interact(self):
         print("Trying to interact...")
         for collectible in collectibles:
-            if collectible.collides(self):
+            
+            if type(collectible) == Collectible and collectible.collides(self):
                 self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
+            elif type(collectible) == RepairPoint and collectible.collides(self):
+                for collected in self.objects:
+                    if collected.item_type == collectible.item_type :
+                        print("increasing score")
+                        print("removing item")
+                        self.objects.remove(collected)
+                        print("restart quest")
+                        collectible.reinit()
+                        return
+                
         pass
 
     def remove_item(self):
@@ -548,6 +559,9 @@ class RepairPoint(GameObject):
         if self.timer == 0:
             self.item_type = 'TOOL%i' % int(random.random() * NUM_TOOLS +1)
 
+    def reinit(self):
+        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        self.item_type = None
 
 def get_entities(level):
     tmp_entities =[]
