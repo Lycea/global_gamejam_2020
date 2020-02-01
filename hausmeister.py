@@ -505,10 +505,12 @@ def controls():
                         player.stopDown()
                         
         if e.type == pygame.JOYBUTTONDOWN:
-            player.doJump()
+            if e.button == 0:
+                player.doJump()
             
         if e.type == pygame.JOYBUTTONUP:
-            player.cancelJump()
+            if e.button == 0:
+                player.cancelJump()
                 
     return True
     
