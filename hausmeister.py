@@ -678,7 +678,7 @@ def init():
 
     global score, playtime
     score = 0
-    playtime = 10 * FPS
+    playtime = 90 * FPS
     
     global TOOL_ORDER, toolno
     TOOL_ORDER = list(range(NUM_TOOLS +1))
