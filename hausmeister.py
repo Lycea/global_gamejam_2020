@@ -81,6 +81,8 @@ scroll = False
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
+         '.': pygame.image.load('gfx/background_2.png'),
+         ',': pygame.image.load('gfx/background_4.png'),
          '-': pygame.image.load('gfx/floor.png'),
          '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
