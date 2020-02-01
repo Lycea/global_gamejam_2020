@@ -247,11 +247,13 @@ class Player(GameObject):
                 newydir = 0
                 newxdir = -1
         elif self.ydir + gravity > 0:
+            self.jumpBlocked = True
         
             # check if player stands on top of ladder
             if colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
                 if self.ydir == 0:
                     newydir = 0         # defy gravity
+                    self.jumpBlocked = False
             else:
                 if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
                     newydir = 0
