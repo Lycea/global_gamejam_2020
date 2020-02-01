@@ -125,7 +125,7 @@ class GameObject():
         self.ydir = 1
         
     def doJump(self):
-        if not self.jumpBlocked and not self.climb:
+        if not self.jumpBlocked:# and not self.climb:
             self.ydir = -4
             self.jumpBlocked = True
             self.jump = True
@@ -278,18 +278,19 @@ class Player(GameObject):
             newx = SCR_W - TILE_W -self.speed
 
         self.x = newx
-
+        
         # climb
-        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
-            if self.ydir != 0:
-                self.climb = True
-                
-                if self.ydir < 0:
-                    self.facedir = UP
-                elif self.ydir > 0:
-                    self.facedir = DOWN
-        else:
-            self.climb = False
+        if not self.jump:
+            if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+                if self.ydir != 0:
+                    self.climb = True
+                    
+                    if self.ydir < 0:
+                        self.facedir = UP
+                    elif self.ydir > 0:
+                        self.facedir = DOWN
+            else:
+                self.climb = False
             
         if not self.climb and not self.jump:
             if self.ydir < 0:
