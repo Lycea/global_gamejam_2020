@@ -237,10 +237,6 @@ class Player(GameObject):
         debugList.append((x1 * TILE_W, y2 * TILE_H))
         debugList.append((x2 * TILE_W, y2 * TILE_H))
         
-        # HACK
-        if not self.climb:
-            OBSTACLES.append('H')
-
         if self.ydir + gravity < 0:
             if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
@@ -251,17 +247,23 @@ class Player(GameObject):
                 newydir = 0
                 newxdir = -1
         elif self.ydir + gravity > 0:
-            if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-            elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-                newxdir = 1
-            elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
-                newydir = 0
-                self.jumpBlocked = False
-                newxdir = -1
+        
+            # check if player stands on top of ladder
+            if colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+                if self.ydir == 0:
+                    newydir = 0         # defy gravity
+            else:
+                if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                    newxdir = 1
+                elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
+                    newydir = 0
+                    self.jumpBlocked = False
+                    newxdir = -1
 
         self.y += newydir
         
@@ -275,10 +277,6 @@ class Player(GameObject):
 
         self.x = newx
 
-        # HACK
-        if not self.climb:
-            OBSTACLES.remove('H')
-        
         # climb
         if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
             if self.ydir != 0:
