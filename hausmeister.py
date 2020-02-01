@@ -121,6 +121,16 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'TOOL9': pygame.image.load('gfx/tool_9.png'),
          }
          
+music = pygame.mixer.Sound('snd/music.ogg')
+music.play(-1)
+
+sfx = {'jump': pygame.mixer.Sound('snd/sfx-jump.ogg'),
+       'collect': pygame.mixer.Sound('snd/sfx-collect.ogg'),
+       'repair': pygame.mixer.Sound('snd/sfx-repair.ogg'),
+       'drop': pygame.mixer.Sound('snd/sfx-drop.ogg'),
+       }
+         
+         
 #tiles['BUBBLE'].convert_alpha()
 #tiles['BUBBLE'].set_alpha(50)
          
@@ -202,6 +212,8 @@ class GameObject():
             self.ydir = -4
             self.jumpBlocked = True
             self.jump = True
+            
+            sfx['jump'].play()
         
     def stopLeft(self):
         if self.xdir < 0:
@@ -256,6 +268,9 @@ class Player(GameObject):
             
             if type(collectible) == Collectible and collectible.collides(self) and len(self.objects)<=self.max_objects:
                 self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
+                
+                sfx['collect'].play()
+                
             elif type(collectible) == RepairPoint and collectible.collides(self):
                 for collected in self.objects:
                     if collected.item_type == collectible.item_type :
@@ -266,6 +281,8 @@ class Player(GameObject):
                         self.objects.remove(collected)
                         print("restart quest")
                         collectible.reinit()
+                        
+                        sfx['repair'].play()
                         return
                 
         pass
@@ -274,6 +291,8 @@ class Player(GameObject):
         if len(self.objects)>0  and self.remove_timer == 0:
             o = self.objects.pop(idx)
             self.remove_timer = 25
+            
+            sfx['drop'].play()
             
             return o
             
