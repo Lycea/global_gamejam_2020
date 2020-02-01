@@ -93,9 +93,13 @@ playtime = 90 * FPS
 
 player = None
 
+lu_bg_tiles =   [' ','.',',']
+lu_wall_tiles = ['#','-','=']
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
+         '.': pygame.image.load('gfx/background_2.png'),
+         ',': pygame.image.load('gfx/background_4.png'),
          '-': pygame.image.load('gfx/floor.png'),
          '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
@@ -116,6 +120,16 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'TOOL8': pygame.image.load('gfx/tool_8.png'),
          'TOOL9': pygame.image.load('gfx/tool_9.png'),
          }
+         
+music = pygame.mixer.Sound('snd/music.ogg')
+music.play(-1)
+
+sfx = {'jump': pygame.mixer.Sound('snd/sfx-jump.ogg'),
+       'collect': pygame.mixer.Sound('snd/sfx-collect.ogg'),
+       'repair': pygame.mixer.Sound('snd/sfx-repair.ogg'),
+       'drop': pygame.mixer.Sound('snd/sfx-drop.ogg'),
+       }
+         
          
 #tiles['BUBBLE'].convert_alpha()
 #tiles['BUBBLE'].set_alpha(50)
@@ -198,6 +212,8 @@ class GameObject():
             self.ydir = -4
             self.jumpBlocked = True
             self.jump = True
+            
+            sfx['jump'].play()
         
     def stopLeft(self):
         if self.xdir < 0:
@@ -244,13 +260,17 @@ class Player(GameObject):
         self.objects=[]
 
         self.remove_timer = 0
+        self.max_objects = 7
     
     def interact(self):
         print("Trying to interact...")
         for collectible in collectibles:
             
-            if type(collectible) == Collectible and collectible.collides(self):
+            if type(collectible) == Collectible and collectible.collides(self) and len(self.objects)<=self.max_objects:
                 self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
+                
+                sfx['collect'].play()
+                
             elif type(collectible) == RepairPoint and collectible.collides(self):
                 for collected in self.objects:
                     if collected.item_type == collectible.item_type :
@@ -261,14 +281,18 @@ class Player(GameObject):
                         self.objects.remove(collected)
                         print("restart quest")
                         collectible.reinit()
+                        
+                        sfx['repair'].play()
                         return
                 
         pass
 
-    def remove_item(self):
+    def remove_item(self,idx=-1):
         if len(self.objects)>0  and self.remove_timer == 0:
-            o = self.objects.pop()
+            o = self.objects.pop(idx)
             self.remove_timer = 25
+            
+            sfx['drop'].play()
             
             return o
             
@@ -276,9 +300,9 @@ class Player(GameObject):
 
     def collides_box(self,entity):
         for box in self.objects:
-            if box.collides(entity):
-                return True
-        return False
+            if box.collides(entity) != False:
+                return (True,self.objects.index(box))
+        return (False,None)
 
     def update(self):
         if self.remove_timer >0:
@@ -432,7 +456,7 @@ class Spider(GameObject):
     def _find_nearest_ceil(self):
         for search_y in range(int(self.y/TILE_H),0,-1):
                       
-            if level[search_y][round(self.x/TILE_W)] in ["-","=","#"]:
+            if level[search_y][round(self.x/TILE_W)] in lu_wall_tiles:
                 self.ceil = search_y
                 return
         
@@ -458,19 +482,31 @@ class Spider(GameObject):
     def update(self):
 
         if player.collides(self) and not self.stole_chest:
-            player.remove_item()
+            item =player.remove_item()
             self.dir = "up"
-        elif player.collides_box(self) and not self.stole_chest:
-            self.dir = "up"
-            player.remove_item()
 
-            self.stole_chest = True
+            
+            if item is not None:
+                global particles
+                p = Particle(player.x, player.y - TILE_H, item.item_type)
+                particles.append(p)
+
+
+        else:
+            result = player.collides_box(self)
+            if result[0] and not self.stole_chest:
+                self.dir = "up"
+                item = player.remove_item(result[1])
+
+                if item:
+                    self.stolen_type = item.item_type
+                    self.stole_chest = True
             
 
         
 
         if self.dir == "down":
-            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in [" "]: 
+            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y+=self.speed
             else:
                 self.dir = "up"
@@ -479,7 +515,7 @@ class Spider(GameObject):
             debugList.append((self.x,self.y-self.speed))
 
             debugList.append((self.x,round((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
-            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in [" "]: 
+            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y-=self.speed/4
             else:
                 self.dir = "wait"
@@ -530,7 +566,7 @@ class Rat(GameObject):
             debugList.append((round((x_new+(0.5*self.xdir))/TILE_W)*TILE_W,round(self.y/TILE_H)*TILE_H))
 
             #check the tile in the walking direction
-            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in[" "]:
+            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in lu_bg_tiles:
 
                 self.x+=(self.speed*self.xdir)
             else:
@@ -583,7 +619,7 @@ class RepairPoint(GameObject):
     def __init__(self,x,y,item_type=None):
         super().__init__(x,y)
         
-        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        self.timer = 1
         self.item_type = None
         self.height = 32
 
@@ -653,7 +689,7 @@ def init():
     setState(STATE_GAME)
     
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/001.lvl")
+    level = load_level("./lvl/002.lvl")
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -813,14 +849,15 @@ def render():
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
-        tile = pygame.transform.flip(entity.getSprite(), entity.flip, False)
-        screen.blit(tile, (entity.x, entity.y - scrolly))
-
         if entity.tile == "S":
             pygame.draw.line(screen,(255,255,255),(entity.x+7,entity.y- scrolly),(entity.x+7,(entity.ceil+1)*TILE_H- scrolly))
             if entity.stole_chest:
-                scaled_sprite = pygame.transform.scale(tiles["BOX"],(8,8))
-                screen.blit(scaled_sprite,(entity.x+4  ,entity.y+TILE_H-scrolly))
+                print(entity.stolen_type)
+                scaled_sprite = pygame.transform.scale(tiles[entity.stolen_type],(16,16))
+                screen.blit(scaled_sprite,(entity.x  ,entity.y+TILE_H-scrolly -5))
+        
+        tile = pygame.transform.flip(entity.getSprite(), entity.flip, False)
+        screen.blit(tile, (entity.x, entity.y - scrolly))
 
 
     for collectible in collectibles:
