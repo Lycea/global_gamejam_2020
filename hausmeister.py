@@ -158,7 +158,7 @@ class Player(GameObject):
         newydir = self.ydir * self.speed
 
         newx = self.x + newxdir
-        newy = self.y + newydir
+        newy = self.y# + newydir
         
         x1 = int(newx / TILE_W)
         x2 = int((newx + TILE_W -1) / TILE_W)
@@ -210,7 +210,7 @@ class Player(GameObject):
         newxdir = self.xdir * self.speed
         newydir = self.ydir * self.speed + self.gravity
 
-        newx = self.x + newxdir
+        newx = self.x# + newxdir
         newy = self.y + newydir
         
         x1 = int(newx / TILE_W)
@@ -297,7 +297,7 @@ class Rat(GameObject):
         
 
 
-player = Player(8 * TILE_W, 29 * TILE_H)
+player = Player(8 * TILE_W, 2 * TILE_H)
 
 def get_entities(level):
     tmp_entities =[]
