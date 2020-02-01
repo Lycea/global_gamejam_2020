@@ -141,10 +141,12 @@ class GameObject():
             self.xdir = 0
         
     def stopUp(self):
-        pass
+        if self.ydir < 0:
+            self.ydir = 0
         
     def stopDown(self):
-        pass
+        if self.ydir > 0:
+            self.ydir = 0
         
     def cancelJump(self):
         pass
@@ -204,26 +206,15 @@ class Player(GameObject):
             elif colltile2 not in OBSTACLES and colltile4 in OBSTACLES:
                 newxdir = 0
                 #newydir = -SPEED
-
-        # collision with screen bounds (left/right)
-        newx = self.x + newxdir
-        
-        if newx < 0:
-            newx = 0
-        elif newx > SCR_W - TILE_W -self.speed:
-            newx = SCR_W - TILE_W -self.speed
-
-        self.x = newx
         
         # vertical collision
-        
-        
         if self.climb:
             gravity = 0
         else:
             gravity = self.gravity
-
-        newxdir = self.xdir * self.speed
+            
+            
+        #newxdir = self.xdir * self.speed
         newydir = self.ydir * self.speed + gravity
 
         newx = self.x
@@ -243,16 +234,20 @@ class Player(GameObject):
         debugList.append((x2 * TILE_W, y1 * TILE_H))
         debugList.append((x1 * TILE_W, y2 * TILE_H))
         debugList.append((x2 * TILE_W, y2 * TILE_H))
+        
+        # HACK
+        if not self.climb:
+            OBSTACLES.append('H')
 
         if self.ydir + gravity < 0:
             if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
             elif colltile1 in OBSTACLES and colltile2 not in OBSTACLES:
                 newydir = 0
-                #newxdir = SPEED
+                newxdir = 1
             elif colltile1 not in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
-                #newxdir = -SPEED
+                newxdir = -1
         elif self.ydir + gravity > 0:
             if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
                 newydir = 0
@@ -260,13 +255,27 @@ class Player(GameObject):
             elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
-                #newxdir = SPEED
+                newxdir = 1
             elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
-                #newxdir = -SPEED
+                newxdir = -1
 
         self.y += newydir
+        
+        newx = self.x + newxdir
+        
+        # collision with screen bounds (left/right)
+        if newx < 0:
+            newx = 0
+        elif newx > SCR_W - TILE_W -self.speed:
+            newx = SCR_W - TILE_W -self.speed
+
+        self.x = newx
+
+        # HACK
+        if not self.climb:
+            OBSTACLES.remove('H')
         
         # climb
         
@@ -276,9 +285,10 @@ class Player(GameObject):
         else:
             self.climb = False
             
+            
         # jump
         
-        if self.ydir < 0:
+        if self.ydir < 0 and not self.climb:
             self.ydir += 0.25
             
 
