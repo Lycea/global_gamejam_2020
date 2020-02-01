@@ -267,17 +267,17 @@ class Spider(GameObject):
 
         self.wait_frames = 0
 
-        self.speed = 0.1
+        self.speed = 1
 
     def update(self):
         if self.dir == "down":
-            if level[round(self.y+self.speed)][self.x] in [" "]: 
+            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in [" "]: 
                 self.y+=self.speed
             else:
                 self.dir = "up"
                 
         elif self.dir == "up":
-            if level[round(self.y-self.speed)][self.x] in [" "]: 
+            if level[round(self.y / TILE_H - self.speed)][int(self.x / TILE_W)] in [" "]: 
                 self.y-=self.speed/4
             else:
                 self.dir = "wait"
@@ -297,8 +297,6 @@ class Rat(GameObject):
         
 
 
-player = Player(8 * TILE_W, 2 * TILE_H)
-
 def get_entities(level):
     tmp_entities =[]
 
@@ -308,17 +306,24 @@ def get_entities(level):
         for char in line:
             
             if char == "R":
-                tmp_entities.append(Rat(x,y))
+                tmp_entities.append(Rat(x * TILE_W, y * TILE_H))
 
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "S":
-                tmp_entities.append(Spider(x,y))
+                tmp_entities.append(Spider(x * TILE_W, y * TILE_H))
 
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
+            elif char == "@":
+                tmp_entities.append(Player(x * TILE_W, y * TILE_H))
+                
+                tmp_str =list(level[y])
+                tmp_str[x]=" "
+                level[y]="".join(tmp_str)
+                
             x+=1
         
         y+=1
@@ -328,6 +333,12 @@ def get_entities(level):
 
 
 entities = get_entities(level)
+
+for e in entities:
+    if type(e) is Player:
+        player = e
+        entities.remove(e)
+        break
 
 
 def init():
@@ -401,7 +412,7 @@ def render():
     
 
     for entity in entities:
-        screen.blit(tiles[entity.tile],(entity.x*TILE_W,entity.y*TILE_H-scrolly))
+        screen.blit(tiles[entity.tile], (entity.x, entity.y - scrolly))
 
     
     spr = playerSprites[player.facedir][int(tick % 20 / 10)]
