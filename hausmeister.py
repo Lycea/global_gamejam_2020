@@ -28,7 +28,7 @@ NUM_TOOLS = 9
 
 def load_level(path):
     file =io.open(path,"r")
-    lvl =file.read().replace("/","").splitlines()
+    lvl =file.read().splitlines()
     file.close()
     
     return lvl
@@ -120,6 +120,10 @@ playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load(
                  (pygame.image.load('gfx/player_up_1.png'), pygame.image.load('gfx/player_up_2.png')),
                  (pygame.image.load('gfx/player_down_1.png'), pygame.image.load('gfx/player_down_2.png')),
                  ]
+                 
+ratSprites = [pygame.image.load('gfx/rat_1.png'), pygame.image.load('gfx/rat_2.png')]
+
+spiderSprites = [pygame.image.load('gfx/spider_1.png'), pygame.image.load('gfx/spider_2.png')]
 
 debugSprite = pygame.image.load('gfx/debug.png')
 
@@ -154,6 +158,11 @@ class GameObject():
 
         self.width = TILE_W
         self.height = TILE_H
+        
+        self.tile = None
+        
+    def getSprite(self):
+        return tiles[self.tile]
         
     def moveLeft(self):
         self.xdir = -1
@@ -369,8 +378,8 @@ class Player(GameObject):
         # collision with screen bounds (left/right)
         if newx < 0:
             newx = 0
-        elif newx > SCR_W - TILE_W -self.speed:
-            newx = SCR_W - TILE_W -self.speed
+        elif newx > SCR_W - TILE_W:
+            newx = SCR_W - TILE_W
 
         self.x = newx
         
@@ -408,7 +417,8 @@ class Spider(GameObject):
                 self.ceil = search_y
                 return
         
-                
+    def getSprite(self):
+        return spiderSprites[int(tick % 20 / 10)]
 
 
     def __init__(self,x,y):
@@ -470,10 +480,12 @@ class Spider(GameObject):
 class Rat(GameObject):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.tile = "R"
         self.xdir = -1
         self.speed = 1.5
         self.flip = False
+        
+    def getSprite(self):
+        return ratSprites[int(tick % 10 / 5)]
     
     def update(self):
         if player.collides(self):
@@ -747,7 +759,7 @@ def render():
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
-        tile = pygame.transform.flip(tiles[entity.tile],entity.flip,False)
+        tile = pygame.transform.flip(entity.getSprite(), entity.flip, False)
         screen.blit(tile, (entity.x, entity.y - scrolly))
 
         if entity.tile == "S":
