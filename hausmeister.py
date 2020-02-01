@@ -269,7 +269,7 @@ class Player(GameObject):
         
         # climb
         
-        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE:
+        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
             if self.ydir != 0:
                 self.climb = True
         else:
