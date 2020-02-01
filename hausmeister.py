@@ -355,6 +355,17 @@ class Player(GameObject):
             
 
 class Spider(GameObject):
+
+    def _find_nearest_ceil(self):
+        for search_y in range(int(self.y/TILE_H),0,-1):
+                      
+            if level[search_y][round(self.x/TILE_W)] in ["-","=","#"]:
+                self.ceil = search_y
+                return
+        
+                
+
+
     def __init__(self,x,y):
         super().__init__(x,y)
         self.dir = "down"
@@ -364,18 +375,25 @@ class Spider(GameObject):
 
         self.speed = 1
         self.flip = False
+        self.ceil = 0
+
+        self.stole_chest = False
+
+        self._find_nearest_ceil()
 
     def update(self):
 
-        if player.collides(self):
+        if player.collides(self) and not self.stole_chest:
             player.remove_item()
             self.dir = "up"
-        elif player.collides_box(self):
+        elif player.collides_box(self) and not self.stole_chest:
             self.dir = "up"
             player.remove_item()
+
+            self.stole_chest = True
             
 
-
+        
 
         if self.dir == "down":
             if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in [" "]: 
@@ -384,7 +402,10 @@ class Spider(GameObject):
                 self.dir = "up"
                 
         elif self.dir == "up":
-            if level[round(self.y / TILE_H - self.speed)][int(self.x / TILE_W)] in [" "]: 
+            debugList.append((self.x,self.y-self.speed))
+
+            debugList.append((self.x,round((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
+            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in [" "]: 
                 self.y-=self.speed/4
             else:
                 self.dir = "wait"
@@ -395,6 +416,10 @@ class Spider(GameObject):
                 self.dir= "down"
             else:
                 self.wait_frames-=1
+                self.stole_chest = False
+
+        #print((self.x,self.y),(self.x,self.ceil*TILE_H))
+        
 
 
 class Rat(GameObject):
@@ -628,6 +653,13 @@ def render():
     for entity in entities:
         tile = pygame.transform.flip(tiles[entity.tile],entity.flip,False)
         screen.blit(tile, (entity.x, entity.y - scrolly))
+
+        if entity.tile == "S":
+            pygame.draw.line(screen,(255,255,255),(entity.x+7,entity.y- scrolly),(entity.x+7,(entity.ceil+1)*TILE_H- scrolly))
+            if entity.stole_chest:
+                scaled_sprite = pygame.transform.scale(tiles["BOX"],(8,8))
+                screen.blit(scaled_sprite,(entity.x+4  ,entity.y+TILE_H-scrolly))
+
 
     for collectible in collectibles:
         #collectible.collides(player)
