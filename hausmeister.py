@@ -64,6 +64,7 @@ scroll = False
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
          '-': pygame.image.load('gfx/floor.png'),
+         '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
          'H': pygame.image.load('gfx/stairs.png'),
          'L': pygame.image.load('gfx/lamp.png'),
@@ -71,7 +72,7 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'S': pygame.image.load('gfx/spider.png'),
          }
 
-OBSTACLES = ['#', '-']
+OBSTACLES = ['#', '-', '=']
 CLIMBABLE = ['H']
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
