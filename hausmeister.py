@@ -28,7 +28,7 @@ NUM_TOOLS = 9
 
 def load_level(path):
     file =io.open(path,"r")
-    lvl =file.read().replace("/","").splitlines()
+    lvl =file.read().splitlines()
     file.close()
     
     return lvl
@@ -367,8 +367,8 @@ class Player(GameObject):
         # collision with screen bounds (left/right)
         if newx < 0:
             newx = 0
-        elif newx > SCR_W - TILE_W -self.speed:
-            newx = SCR_W - TILE_W -self.speed
+        elif newx > SCR_W - TILE_W:
+            newx = SCR_W - TILE_W
 
         self.x = newx
         
