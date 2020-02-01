@@ -1,5 +1,6 @@
 import pygame
 import io
+import random
 
 
 SCR_W = 320
@@ -18,6 +19,8 @@ FULLSCREEN = False
 DEBUG_MODE = False
 
 JOY_DEADZONE = 0.4
+
+NUM_TOOLS = 8
 
 
 def load_level(path):
@@ -81,11 +84,26 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'L': pygame.image.load('gfx/lamp.png'),
          'R': pygame.image.load('gfx/rat.png'),
          'S': pygame.image.load('gfx/spider.png'),
-         "BOX":pygame.image.load('gfx/box.png')
+         "BOX":pygame.image.load('gfx/box.png'),
+         'BUBBLE': pygame.image.load('gfx/bubble.png'),
+         
+         'TOOL1': pygame.image.load('gfx/tool_1.png'),
+         'TOOL2': pygame.image.load('gfx/tool_2.png'),
+         'TOOL3': pygame.image.load('gfx/tool_3.png'),
+         'TOOL4': pygame.image.load('gfx/tool_4.png'),
+         'TOOL5': pygame.image.load('gfx/tool_5.png'),
+         'TOOL6': pygame.image.load('gfx/tool_6.png'),
+         'TOOL7': pygame.image.load('gfx/tool_7.png'),
+         'TOOL8': pygame.image.load('gfx/tool_8.png'),
          }
-
+         
+#tiles['BUBBLE'].convert_alpha()
+#tiles['BUBBLE'].set_alpha(50)
+         
 OBSTACLES = ['#', '-', '=']
 CLIMBABLE = ['H']
+
+
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
@@ -482,6 +500,20 @@ class Particle(GameObject):
         self.cnt += 1
 
 
+class RepairPoint(GameObject):
+    def __init__(self,x,y,item_type=None):
+        super().__init__(x,y)
+        
+        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        self.item_type = None
+
+    def update(self):
+        self.timer -= 1
+        
+        if self.timer == 0:
+            self.item_type = 'TOOL%i' % int(random.random() * NUM_TOOLS +1)
+
+
 def get_entities(level):
     tmp_entities =[]
     tmp_objects = []
@@ -515,6 +547,9 @@ def get_entities(level):
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
+            elif char == "D":
+                tmp_objects.append(RepairPoint((x+0.0)*TILE_W, (y-1.5)*TILE_H))
+                
             x+=1
         
         y+=1
@@ -662,7 +697,11 @@ def render():
 
     for collectible in collectibles:
         #collectible.collides(player)
-        screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+        
+        if type(collectible) is RepairPoint:
+            if collectible.item_type is not None:
+                if int(tick % 40 / 20):
+                    screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
 
 
     for particle in particles:
@@ -698,6 +737,7 @@ def update():
         entity.update()
 
     for collectible in collectibles:
+        collectible.update()
         collectible.collides(player)
         
     removeParticles = []
