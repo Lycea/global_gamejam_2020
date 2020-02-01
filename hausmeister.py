@@ -114,19 +114,15 @@ class GameObject():
         
     def moveLeft(self):
         self.xdir = -1
-        self.facedir = LEFT
         
     def moveRight(self):
         self.xdir = 1
-        self.facedir = RIGHT
         
     def moveUp(self):
         self.ydir = -1
-        self.facedir = UP
         
     def moveDown(self):
         self.ydir = 1
-        self.facedir = DOWN
         
     def doJump(self):
         if not self.jumpBlocked and not self.climb:
@@ -152,7 +148,6 @@ class GameObject():
         
     def cancelJump(self):
         pass
-        #self.ydir = 0
         
     def update(self):
         pass
@@ -165,6 +160,11 @@ class Player(GameObject):
         self.climb = False
         
     def update(self):
+    
+        if self.xdir < 0:
+            self.facedir = LEFT
+        elif self.xdir > 0:
+            self.facedir = RIGHT
             
         # horizontal collision
         
@@ -280,13 +280,20 @@ class Player(GameObject):
             OBSTACLES.remove('H')
         
         # climb
-        
         if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
             if self.ydir != 0:
                 self.climb = True
+                
+                if self.ydir < 0:
+                    self.facedir = UP
+                elif self.ydir > 0:
+                    self.facedir = DOWN
         else:
             self.climb = False
             
+        if not self.climb and not self.jump:
+            if self.ydir < 0:
+                self.ydir = 0
             
         # jump
         if self.jump:
