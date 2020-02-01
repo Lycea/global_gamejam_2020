@@ -105,6 +105,11 @@ OBSTACLES = ['#', '-', '=']
 CLIMBABLE = ['H']
 
 
+TOOL_ORDER = list(range(NUM_TOOLS +1))
+random.shuffle(TOOL_ORDER)
+TOOL_ORDER.remove(0)
+
+toolno = 0
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
@@ -543,6 +548,8 @@ class RepairPoint(GameObject):
 def get_entities(level):
     tmp_entities =[]
     tmp_objects = []
+    
+    global toolno
 
     y=0
     for line in level:
@@ -568,7 +575,8 @@ def get_entities(level):
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "O":
-                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % (int(random.random() * NUM_TOOLS + 1))))
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % TOOL_ORDER[toolno]))
+                toolno += 1
                 
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
