@@ -517,7 +517,9 @@ def controls():
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_ESCAPE:
                 return False
-            
+                
+            if e.key == pygame.K_s:
+                player.doJump()
             if e.key == pygame.K_a:
                 player.interact()
 
@@ -529,8 +531,6 @@ def controls():
                 player.moveUp()
             if e.key == pygame.K_DOWN:
                 player.moveDown()
-            if e.key == pygame.K_RCTRL:
-                player.doJump()
                 
             if e.key == pygame.K_RETURN:
                 mods = pygame.key.get_mods()
@@ -546,7 +546,8 @@ def controls():
                 player.stopUp()
             if e.key == pygame.K_DOWN:
                 player.stopDown()
-            if e.key == pygame.K_RCTRL:
+                
+            if e.key == pygame.K_s:
                 player.cancelJump()
                 
             if e.key == pygame.K_F11:
@@ -587,6 +588,8 @@ def controls():
         if e.type == pygame.JOYBUTTONDOWN:
             if e.button == 0:
                 player.doJump()
+            elif e.button == 1:
+                player.interact()
             
         if e.type == pygame.JOYBUTTONUP:
             if e.button == 0:
