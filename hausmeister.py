@@ -227,12 +227,13 @@ class Player(GameObject):
         self.objects=[]
 
         self.remove_timer = 0
+        self.max_objects = 7
     
     def interact(self):
         print("Trying to interact...")
         for collectible in collectibles:
             
-            if type(collectible) == Collectible and collectible.collides(self):
+            if type(collectible) == Collectible and collectible.collides(self) and len(self.objects)<=self.max_objects:
                 self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
             elif type(collectible) == RepairPoint and collectible.collides(self):
                 for collected in self.objects:
