@@ -58,6 +58,8 @@ LEV_H = len(level)
 
 debugList = []
 
+scrolly = 0
+scroll = False
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
@@ -398,10 +400,24 @@ def controls():
 def render():
     screen.fill((0, 0, 0))
     
-    scrolly = player.y - SCR_H * 0.75
+    global scrolly, scroll
+    camy = player.y - SCR_H * 0.5
     
-    if scrolly > LEV_H * TILE_H:
-        scrolly = LEV_H * TILE_H
+    if scrolly < camy - 3 * TILE_H:
+        scroll = True
+    if scrolly > camy + 3 * TILE_H:
+        scroll = True
+    
+    if scroll:
+        if scrolly < camy -2:
+            scrolly += 2
+        elif scrolly > camy +2:
+            scrolly -= 2
+        else:
+            scroll = False
+    
+    if scrolly > LEV_H * TILE_H - SCR_H * 0.5:
+        scrolly = LEV_H * TILE_H - SCR_H * 0.5
 
     for y in range(LEV_H):
         for x in range(LEV_W):
@@ -410,10 +426,8 @@ def render():
             if tile in tiles:                
                 screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
-
     for entity in entities:
         screen.blit(tiles[entity.tile], (entity.x, entity.y - scrolly))
-
     
     spr = playerSprites[player.facedir][int(tick % 20 / 10)]
     screen.blit(spr, (player.x, player.y - scrolly))
