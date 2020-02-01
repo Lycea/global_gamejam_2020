@@ -20,7 +20,7 @@ DEBUG_MODE = False
 
 JOY_DEADZONE = 0.4
 
-NUM_TOOLS = 8
+NUM_TOOLS = 9
 
 
 def load_level(path):
@@ -95,6 +95,7 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'TOOL6': pygame.image.load('gfx/tool_6.png'),
          'TOOL7': pygame.image.load('gfx/tool_7.png'),
          'TOOL8': pygame.image.load('gfx/tool_8.png'),
+         'TOOL9': pygame.image.load('gfx/tool_9.png'),
          }
          
 #tiles['BUBBLE'].convert_alpha()
@@ -211,7 +212,7 @@ class Player(GameObject):
         print("Trying to interact...")
         for collectible in collectibles:
             if collectible.collides(self):
-                self.objects.append(Collected(self.x+8,self.y+8))
+                self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
         pass
 
     def remove_item(self):
@@ -489,10 +490,10 @@ class Rat(GameObject):
         pass
 
 class Collectible(GameObject):
-    def __init__(self,x,y):
+    def __init__(self,x,y,item_type=None):
         super().__init__(x,y)
         self.stack_size = 0
-        self.item_type = "BOX"
+        self.item_type = item_type or "BOX"
         
 
 class Collected(GameObject):
@@ -501,8 +502,8 @@ class Collected(GameObject):
 
         self.item_type = item_type or "BOX"
 
-        self.width = 8
-        self.height = 8
+        self.width = 12
+        self.height = 12
         
 
 class Particle(GameObject):
@@ -511,8 +512,8 @@ class Particle(GameObject):
 
         self.item_type = item_type or "BOX"
 
-        self.width = 8
-        self.height = 8
+        self.width = 12
+        self.height = 12
         
         self.cnt = 0
         
@@ -567,7 +568,7 @@ def get_entities(level):
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "O":
-                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H))
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % (int(random.random() * NUM_TOOLS + 1))))
                 
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
@@ -733,13 +734,15 @@ def render():
         if type(collectible) is RepairPoint:
             if int(tick % 40 / 20):
                 continue
+        else:
+            screen.blit(tiles['BOX'], (collectible.x, collectible.y - scrolly))
                 
         if collectible.item_type is not None:
-                screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+            screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
 
 
     for particle in particles:
-        scaled_sprite = pygame.transform.scale(tiles[particle.item_type],(8,8))
+        scaled_sprite = pygame.transform.scale(tiles[particle.item_type],(particle.width,particle.height))
         screen.blit(scaled_sprite, (particle.x, particle.y - scrolly))
 
 
@@ -749,7 +752,7 @@ def render():
         player.objects[collected_num].y = player.y - player.objects[collected_num].height*(collected_num+1)
 
 
-        scaled_sprite = pygame.transform.scale(tiles[player.objects[collected_num].item_type],(8,8))
+        scaled_sprite = pygame.transform.scale(tiles[player.objects[collected_num].item_type],(player.objects[collected_num].width,player.objects[collected_num].height))
         screen.blit(scaled_sprite,(player.objects[collected_num].x  ,player.objects[collected_num].y-scrolly+anim_frame))
 
     
