@@ -109,6 +109,7 @@ class GameObject():
         self.speed = 2
         self.gravity = 2
         
+        self.jump = False
         self.jumpBlocked = False
         
     def moveLeft(self):
@@ -128,9 +129,10 @@ class GameObject():
         self.facedir = DOWN
         
     def doJump(self):
-        if not self.jumpBlocked:
+        if not self.jumpBlocked and not self.climb:
             self.ydir = -4
             self.jumpBlocked = True
+            self.jump = True
         
     def stopLeft(self):
         if self.xdir < 0:
@@ -287,9 +289,11 @@ class Player(GameObject):
             
             
         # jump
-        
-        if self.ydir < 0 and not self.climb:
-            self.ydir += 0.25
+        if self.jump:
+            if self.ydir < 0:
+                self.ydir += 0.25
+            else:
+                self.jump = False
             
 
 class Spider(GameObject):
