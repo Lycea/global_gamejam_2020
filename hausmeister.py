@@ -447,8 +447,10 @@ def render():
         else:
             scroll = False
     
-    if scrolly > LEV_H * TILE_H - SCR_H * 0.5:
-        scrolly = LEV_H * TILE_H - SCR_H * 0.5
+    if scrolly > LEV_H * TILE_H -SCR_H :
+        scroll = False
+        scrolly =LEV_H * TILE_H -SCR_H
+
 
     for y in range(LEV_H):
         for x in range(LEV_W):
