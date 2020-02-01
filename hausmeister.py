@@ -200,6 +200,10 @@ class Player(GameObject):
         if len(self.objects)>0  and self.remove_timer == 0:
             self.objects.pop()
             self.remove_timer = 25
+            
+            return True
+            
+        return False
 
     def collides_box(self,entity):
         for box in self.objects:
@@ -407,7 +411,10 @@ class Rat(GameObject):
     
     def update(self):
         if player.collides(self):
-            player.remove_item()
+            if player.remove_item():
+                global particles
+                p = Particle(player.x, player.y - TILE_H, 'BOX')
+                particles.append(p)
 
 
         debugList.append((self.x,self.y))
@@ -453,6 +460,24 @@ class Collected(GameObject):
         self.height = 8
         
 
+class Particle(GameObject):
+    def __init__(self,x,y,item_type=None):
+        super().__init__(x,y)
+
+        self.item_type = item_type or "BOX"
+
+        self.width = 8
+        self.height = 8
+        
+        self.cnt = 0
+        
+        self.xdir = -1 if self.x > SCR_W / 2 else 1
+        
+    def update(self):
+        self.x += self.xdir
+        self.y += 1
+        
+        self.cnt += 1
 
 
 def get_entities(level):
@@ -497,6 +522,7 @@ def get_entities(level):
 
 
 entities ,collectibles = get_entities(level)
+particles = []
 
 for e in entities:
     if type(e) is Player:
@@ -637,6 +663,11 @@ def render():
         screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
 
 
+    for particle in particles:
+        scaled_sprite = pygame.transform.scale(tiles[particle.item_type],(8,8))
+        screen.blit(scaled_sprite, (particle.x, particle.y - scrolly))
+
+
     anim_frame = int(tick % 20 / 10)
     for collected_num in range(len(player.objects)):
         player.objects[collected_num].x = player.x +4
@@ -657,6 +688,7 @@ def render():
         
     debugList = []
 
+
 def update():
     player.update()
 
@@ -665,6 +697,16 @@ def update():
 
     for collectible in collectibles:
         collectible.collides(player)
+        
+    removeParticles = []
+    for particle in particles:
+        particle.update()
+        
+        if particle.cnt > 24:
+            removeParticles.append(particle)
+            
+    for particle in removeParticles:
+        particles.remove(particle)
     
     
 tick = 0
