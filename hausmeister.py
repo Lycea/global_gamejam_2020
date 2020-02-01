@@ -64,6 +64,7 @@ scroll = False
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
          '-': pygame.image.load('gfx/floor.png'),
+         '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
          'H': pygame.image.load('gfx/stairs.png'),
          'L': pygame.image.load('gfx/lamp.png'),
@@ -71,10 +72,13 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'S': pygame.image.load('gfx/spider.png'),
          }
 
-OBSTACLES = ['#', '-']
+OBSTACLES = ['#', '-', '=']
+CLIMBABLE = ['H']
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
+                 (pygame.image.load('gfx/player_up_1.png'), pygame.image.load('gfx/player_up_2.png')),
+                 (pygame.image.load('gfx/player_down_1.png'), pygame.image.load('gfx/player_down_2.png')),
                  ]
 
 debugSprite = pygame.image.load('gfx/debug.png')
@@ -105,26 +109,26 @@ class GameObject():
         self.speed = 2
         self.gravity = 2
         
+        self.jump = False
         self.jumpBlocked = False
         
     def moveLeft(self):
         self.xdir = -1
-        self.facedir = LEFT
         
     def moveRight(self):
         self.xdir = 1
-        self.facedir = RIGHT
         
     def moveUp(self):
-        pass
+        self.ydir = -1
         
     def moveDown(self):
-        pass
+        self.ydir = 1
         
     def doJump(self):
-        if not self.jumpBlocked:
+        if not self.jumpBlocked and not self.climb:
             self.ydir = -4
             self.jumpBlocked = True
+            self.jump = True
         
     def stopLeft(self):
         if self.xdir < 0:
@@ -135,14 +139,15 @@ class GameObject():
             self.xdir = 0
         
     def stopUp(self):
-        pass
+        if self.ydir < 0:
+            self.ydir = 0
         
     def stopDown(self):
-        pass
+        if self.ydir > 0:
+            self.ydir = 0
         
     def cancelJump(self):
         pass
-        #self.ydir = 0
         
     def update(self):
         pass
@@ -152,7 +157,14 @@ class Player(GameObject):
     def __init__(self, x, y):
         super().__init__(x, y)
         
+        self.climb = False
+        
     def update(self):
+    
+        if self.xdir < 0:
+            self.facedir = LEFT
+        elif self.xdir > 0:
+            self.facedir = RIGHT
             
         # horizontal collision
         
@@ -160,7 +172,7 @@ class Player(GameObject):
         newydir = self.ydir * self.speed
 
         newx = self.x + newxdir
-        newy = self.y# + newydir
+        newy = self.y
         
         x1 = int(newx / TILE_W)
         x2 = int((newx + TILE_W -1) / TILE_W)
@@ -196,23 +208,18 @@ class Player(GameObject):
             elif colltile2 not in OBSTACLES and colltile4 in OBSTACLES:
                 newxdir = 0
                 #newydir = -SPEED
-
-        # collision with screen bounds (left/right)
-        newx = self.x + newxdir
-        
-        if newx < 0:
-            newx = 0
-        elif newx > SCR_W - TILE_W -self.speed:
-            newx = SCR_W - TILE_W -self.speed
-
-        self.x = newx
         
         # vertical collision
+        if self.climb:
+            gravity = 0
+        else:
+            gravity = self.gravity
+            
+            
+        #newxdir = self.xdir * self.speed
+        newydir = self.ydir * self.speed + gravity
 
-        newxdir = self.xdir * self.speed
-        newydir = self.ydir * self.speed + self.gravity
-
-        newx = self.x# + newxdir
+        newx = self.x
         newy = self.y + newydir
         
         x1 = int(newx / TILE_W)
@@ -229,36 +236,71 @@ class Player(GameObject):
         debugList.append((x2 * TILE_W, y1 * TILE_H))
         debugList.append((x1 * TILE_W, y2 * TILE_H))
         debugList.append((x2 * TILE_W, y2 * TILE_H))
+        
+        # HACK
+        if not self.climb:
+            OBSTACLES.append('H')
 
-        if self.ydir + self.gravity < 0:
+        if self.ydir + gravity < 0:
             if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
             elif colltile1 in OBSTACLES and colltile2 not in OBSTACLES:
                 newydir = 0
-                #newxdir = SPEED
+                newxdir = 1
             elif colltile1 not in OBSTACLES and colltile2 in OBSTACLES:
                 newydir = 0
-                #newxdir = -SPEED
-        elif self.ydir + self.gravity > 0:
+                newxdir = -1
+        elif self.ydir + gravity > 0:
             if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
             elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
-                #newxdir = SPEED
+                newxdir = 1
             elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
                 newydir = 0
                 self.jumpBlocked = False
-                #newxdir = -SPEED
+                newxdir = -1
 
         self.y += newydir
         
+        newx = self.x + newxdir
         
+        # collision with screen bounds (left/right)
+        if newx < 0:
+            newx = 0
+        elif newx > SCR_W - TILE_W -self.speed:
+            newx = SCR_W - TILE_W -self.speed
+
+        self.x = newx
+
+        # HACK
+        if not self.climb:
+            OBSTACLES.remove('H')
+        
+        # climb
+        if colltile1 in CLIMBABLE or colltile2 in CLIMBABLE or colltile3 in CLIMBABLE or colltile4 in CLIMBABLE:
+            if self.ydir != 0:
+                self.climb = True
+                
+                if self.ydir < 0:
+                    self.facedir = UP
+                elif self.ydir > 0:
+                    self.facedir = DOWN
+        else:
+            self.climb = False
+            
+        if not self.climb and not self.jump:
+            if self.ydir < 0:
+                self.ydir = 0
+            
         # jump
-        
-        if self.ydir < 0:
-            self.ydir += 0.25
+        if self.jump:
+            if self.ydir < 0:
+                self.ydir += 0.25
+            else:
+                self.jump = False
             
 
 class Spider(GameObject):
