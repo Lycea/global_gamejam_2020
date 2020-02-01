@@ -1,5 +1,6 @@
 import pygame
 import io
+import random
 
 
 SCR_W = 320
@@ -18,6 +19,8 @@ FULLSCREEN = False
 DEBUG_MODE = False
 
 JOY_DEADZONE = 0.4
+
+NUM_TOOLS = 8
 
 
 def load_level(path):
@@ -81,11 +84,26 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'L': pygame.image.load('gfx/lamp.png'),
          'R': pygame.image.load('gfx/rat.png'),
          'S': pygame.image.load('gfx/spider.png'),
-         "BOX":pygame.image.load('gfx/box.png')
+         "BOX":pygame.image.load('gfx/box.png'),
+         'BUBBLE': pygame.image.load('gfx/bubble.png'),
+         
+         'TOOL1': pygame.image.load('gfx/tool_1.png'),
+         'TOOL2': pygame.image.load('gfx/tool_2.png'),
+         'TOOL3': pygame.image.load('gfx/tool_3.png'),
+         'TOOL4': pygame.image.load('gfx/tool_4.png'),
+         'TOOL5': pygame.image.load('gfx/tool_5.png'),
+         'TOOL6': pygame.image.load('gfx/tool_6.png'),
+         'TOOL7': pygame.image.load('gfx/tool_7.png'),
+         'TOOL8': pygame.image.load('gfx/tool_8.png'),
          }
-
+         
+#tiles['BUBBLE'].convert_alpha()
+#tiles['BUBBLE'].set_alpha(50)
+         
 OBSTACLES = ['#', '-', '=']
 CLIMBABLE = ['H']
+
+
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
@@ -198,8 +216,12 @@ class Player(GameObject):
 
     def remove_item(self):
         if len(self.objects)>0  and self.remove_timer == 0:
-            self.objects.pop()
+            o = self.objects.pop()
             self.remove_timer = 25
+            
+            return o
+            
+        return None
 
     def collides_box(self,entity):
         for box in self.objects:
@@ -432,7 +454,12 @@ class Rat(GameObject):
     
     def update(self):
         if player.collides(self):
-            player.remove_item()
+            o = player.remove_item()
+            
+            if o is not None:
+                global particles
+                p = Particle(player.x, player.y - TILE_H, o.item_type)
+                particles.append(p)
 
 
         debugList.append((self.x,self.y))
@@ -478,6 +505,38 @@ class Collected(GameObject):
         self.height = 8
         
 
+class Particle(GameObject):
+    def __init__(self,x,y,item_type=None):
+        super().__init__(x,y)
+
+        self.item_type = item_type or "BOX"
+
+        self.width = 8
+        self.height = 8
+        
+        self.cnt = 0
+        
+        self.xdir = -1 if self.x > SCR_W / 2 else 1
+        
+    def update(self):
+        self.x += self.xdir
+        self.y += 1
+        
+        self.cnt += 1
+
+
+class RepairPoint(GameObject):
+    def __init__(self,x,y,item_type=None):
+        super().__init__(x,y)
+        
+        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        self.item_type = None
+
+    def update(self):
+        self.timer -= 1
+        
+        if self.timer == 0:
+            self.item_type = 'TOOL%i' % int(random.random() * NUM_TOOLS +1)
 
 
 def get_entities(level):
@@ -513,6 +572,9 @@ def get_entities(level):
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
+            elif char == "D":
+                tmp_objects.append(RepairPoint((x+0.0)*TILE_W, (y-1.5)*TILE_H))
+                
             x+=1
         
         y+=1
@@ -522,6 +584,7 @@ def get_entities(level):
 
 
 entities ,collectibles = get_entities(level)
+particles = []
 
 for e in entities:
     if type(e) is Player:
@@ -542,7 +605,9 @@ def controls():
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_ESCAPE:
                 return False
-            
+                
+            if e.key == pygame.K_s:
+                player.doJump()
             if e.key == pygame.K_a:
                 player.interact()
 
@@ -554,8 +619,6 @@ def controls():
                 player.moveUp()
             if e.key == pygame.K_DOWN:
                 player.moveDown()
-            if e.key == pygame.K_RCTRL:
-                player.doJump()
                 
             if e.key == pygame.K_RETURN:
                 mods = pygame.key.get_mods()
@@ -571,7 +634,8 @@ def controls():
                 player.stopUp()
             if e.key == pygame.K_DOWN:
                 player.stopDown()
-            if e.key == pygame.K_RCTRL:
+                
+            if e.key == pygame.K_s:
                 player.cancelJump()
                 
             if e.key == pygame.K_F11:
@@ -612,6 +676,8 @@ def controls():
         if e.type == pygame.JOYBUTTONDOWN:
             if e.button == 0:
                 player.doJump()
+            elif e.button == 1:
+                player.interact()
             
         if e.type == pygame.JOYBUTTONUP:
             if e.button == 0:
@@ -663,7 +729,18 @@ def render():
 
     for collectible in collectibles:
         #collectible.collides(player)
-        screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+        
+        if type(collectible) is RepairPoint:
+            if int(tick % 40 / 20):
+                continue
+                
+        if collectible.item_type is not None:
+                screen.blit(tiles[collectible.item_type], (collectible.x, collectible.y - scrolly))
+
+
+    for particle in particles:
+        scaled_sprite = pygame.transform.scale(tiles[particle.item_type],(8,8))
+        screen.blit(scaled_sprite, (particle.x, particle.y - scrolly))
 
 
     anim_frame = int(tick % 20 / 10)
@@ -686,6 +763,7 @@ def render():
         
     debugList = []
 
+
 def update():
     player.update()
 
@@ -693,7 +771,18 @@ def update():
         entity.update()
 
     for collectible in collectibles:
+        collectible.update()
         collectible.collides(player)
+        
+    removeParticles = []
+    for particle in particles:
+        particle.update()
+        
+        if particle.cnt > 24:
+            removeParticles.append(particle)
+            
+    for particle in removeParticles:
+        particles.remove(particle)
     
     
 tick = 0
