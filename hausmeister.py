@@ -11,9 +11,11 @@ WIN_H = 768
 TILE_W = 16
 TILE_H = 16
 
+FPS = 60
+
 FULLSCREEN = False
 
-
+DEBUG_MODE = False
 
 
 def load_level(path):
@@ -21,13 +23,8 @@ def load_level(path):
     lvl =file.read().replace("/","").splitlines()
     file.close()
     
-
-    
     return lvl
     
-
-
-
 
 pygame.display.init()
 window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
@@ -59,6 +56,7 @@ LEV_W = len(level[0])
 LEV_H = len(level)
 
 
+debugList = []
 
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
@@ -71,11 +69,13 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'S': pygame.image.load('gfx/spider.png'),
          }
 
+OBSTACLES = ['#', '-']
 
 playerSprites = [(pygame.image.load('gfx/player_left_1.png'), pygame.image.load('gfx/player_left_2.png')),
                  (pygame.image.load('gfx/player_right_1.png'), pygame.image.load('gfx/player_right_2.png')),
                  ]
 
+debugSprite = pygame.image.load('gfx/debug.png')
 
     
 def toggleFullscreen():
@@ -122,6 +122,7 @@ class GameObject():
     def doJump(self):
         if not self.jumpBlocked:
             self.ydir = -4
+            self.jumpBlocked = True
         
     def stopLeft(self):
         if self.xdir < 0:
@@ -142,49 +143,121 @@ class GameObject():
         #self.ydir = 0
         
     def update(self):
-        updated = False
-
-        newx = self.x
-        newy = self.y
+        pass
         
-        newx += self.xdir * self.speed
-        newy += (self.ydir + self.gravity) * self.speed
         
-        if self.ydir < 0:
-            self.ydir += 0.125
+class Player(GameObject):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        
+    def update(self):
             
+        # horizontal collision
+        
+        newxdir = self.xdir * self.speed
+        newydir = self.ydir * self.speed
+
+        newx = self.x + newxdir
+        newy = self.y + newydir
+        
+        x1 = int(newx / TILE_W)
+        x2 = int((newx + TILE_W -1) / TILE_W)
+        y1 = int(newy / TILE_H)
+        y2 = int((newy + TILE_H -1) / TILE_H)
+
+        colltile1 = level[y1][x1]  # upper left
+        colltile2 = level[y1][x2]  # upper right
+        colltile3 = level[y2][x1]  # lower left
+        colltile4 = level[y2][x2]  # lower right
+
+        global debugList
+        debugList.append((x1 * TILE_W, y1 * TILE_H))
+        debugList.append((x2 * TILE_W, y1 * TILE_H))
+        debugList.append((x1 * TILE_W, y2 * TILE_H))
+        debugList.append((x2 * TILE_W, y2 * TILE_H))
+
+        if self.xdir < 0:
+            if colltile1 in OBSTACLES and colltile3 in OBSTACLES:
+                newxdir = 0
+            elif colltile1 in OBSTACLES and colltile3 not in OBSTACLES:
+                newxdir = 0
+                #newydir = SPEED
+            elif colltile1 not in OBSTACLES and colltile3 in OBSTACLES:
+                newxdir = 0
+                #newydir = -SPEED
+        elif self.xdir > 0:
+            if colltile2 in OBSTACLES and colltile4 in OBSTACLES:
+                newxdir = 0
+            elif colltile2 in OBSTACLES and colltile4 not in OBSTACLES:
+                newxdir = 0
+                #newydir = SPEED
+            elif colltile2 not in OBSTACLES and colltile4 in OBSTACLES:
+                newxdir = 0
+                #newydir = -SPEED
+
         # collision with screen bounds (left/right)
+        newx = self.x + newxdir
+        
         if newx < 0:
             newx = 0
-        if newx > SCR_W - TILE_W:
-            newx = SCR_W - TILE_W
-            
-        # collision
-        collx = int((newx - TILE_W / 2) / TILE_W)
-        colly = int((newy +TILE_H-1) / TILE_H)
-        
-        if level[colly][collx] == ' ':
-            self.y = newy
-        else:
-            self.jumpBlocked = False
-            self.y = (colly -1) * TILE_H
+        elif newx > SCR_W - TILE_W -self.speed:
+            newx = SCR_W - TILE_W -self.speed
 
         self.x = newx
         
+        # vertical collision
 
+        newxdir = self.xdir * self.speed
+        newydir = self.ydir * self.speed + self.gravity
 
-class Player(GameObject):
-    def __init__(self,x,y):
-        super().__init__(x,y)
+        newx = self.x + newxdir
+        newy = self.y + newydir
+        
+        x1 = int(newx / TILE_W)
+        x2 = int((newx + TILE_W -1) / TILE_W)
+        y1 = int(newy / TILE_H)
+        y2 = int((newy + TILE_H -1) / TILE_H)
 
+        colltile1 = level[y1][x1]  # upper left
+        colltile2 = level[y1][x2]  # upper right
+        colltile3 = level[y2][x1]  # lower left
+        colltile4 = level[y2][x2]  # lower right
 
-class Rat(GameObject):
-    def __init__(self,x,y):
-        super().__init__(x,y)
-        self.tile = "R"
+        debugList.append((x1 * TILE_W, y1 * TILE_H))
+        debugList.append((x2 * TILE_W, y1 * TILE_H))
+        debugList.append((x1 * TILE_W, y2 * TILE_H))
+        debugList.append((x2 * TILE_W, y2 * TILE_H))
 
-    def update(self):
-        pass
+        if self.ydir + self.gravity < 0:
+            if colltile1 in OBSTACLES and colltile2 in OBSTACLES:
+                newydir = 0
+            elif colltile1 in OBSTACLES and colltile2 not in OBSTACLES:
+                newydir = 0
+                #newxdir = SPEED
+            elif colltile1 not in OBSTACLES and colltile2 in OBSTACLES:
+                newydir = 0
+                #newxdir = -SPEED
+        elif self.ydir + self.gravity > 0:
+            if colltile3 in OBSTACLES and colltile4 in OBSTACLES:
+                newydir = 0
+                self.jumpBlocked = False
+            elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
+                newydir = 0
+                self.jumpBlocked = False
+                #newxdir = SPEED
+            elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
+                newydir = 0
+                self.jumpBlocked = False
+                #newxdir = -SPEED
+
+        self.y += newydir
+        
+        
+        # jump
+        
+        if self.ydir < 0:
+            self.ydir += 0.25
+            
 
 class Spider(GameObject):
     def __init__(self,x,y):
@@ -217,10 +290,14 @@ class Spider(GameObject):
                 self.wait_frames-=1
 
 
+class Rat(GameObject):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.tile = "R"
         
 
 
-player = Player(8 * TILE_W, 31 * TILE_H)
+player = Player(8 * TILE_W, 29 * TILE_H)
 
 def get_entities(level):
     tmp_entities =[]
@@ -294,6 +371,17 @@ def controls():
             if e.key == pygame.K_RCTRL:
                 player.cancelJump()
                 
+            if e.key == pygame.K_F11:
+                global FPS
+                if FPS == 20:
+                    FPS = 60
+                else:
+                    FPS = 20
+                    
+            if e.key == pygame.K_F12:
+                global DEBUG_MODE
+                DEBUG_MODE = not DEBUG_MODE
+                
     return True
     
 def render():
@@ -319,8 +407,12 @@ def render():
     spr = playerSprites[player.facedir][int(tick % 20 / 10)]
     screen.blit(spr, (player.x, player.y - scrolly))
 
-    
-
+    if DEBUG_MODE:
+        global debugList
+        for x, y in debugList:
+            screen.blit(debugSprite, (x, y - scrolly))
+        
+    debugList = []
 
 def update():
     player.update()
@@ -349,7 +441,7 @@ while running:
         
     update()
     
-    clock.tick(60)
+    clock.tick(FPS)
 
 
 
