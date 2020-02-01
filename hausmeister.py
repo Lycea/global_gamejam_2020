@@ -93,6 +93,8 @@ playtime = 90 * FPS
 
 player = None
 
+lu_bg_tiles =   [' ','.',',']
+lu_wall_tiles = ['#','-','=']
 
 tiles = {'#': pygame.image.load('gfx/wall.png'),
          ' ': pygame.image.load('gfx/background.png'),
@@ -435,7 +437,7 @@ class Spider(GameObject):
     def _find_nearest_ceil(self):
         for search_y in range(int(self.y/TILE_H),0,-1):
                       
-            if level[search_y][round(self.x/TILE_W)] in ["-","=","#"]:
+            if level[search_y][round(self.x/TILE_W)] in lu_wall_tiles:
                 self.ceil = search_y
                 return
         
@@ -465,7 +467,6 @@ class Spider(GameObject):
             self.dir = "up"
 
             
-            
             if item is not None:
                 global particles
                 p = Particle(player.x, player.y - TILE_H, item.item_type)
@@ -486,7 +487,7 @@ class Spider(GameObject):
         
 
         if self.dir == "down":
-            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in [" "]: 
+            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y+=self.speed
             else:
                 self.dir = "up"
@@ -495,7 +496,7 @@ class Spider(GameObject):
             debugList.append((self.x,self.y-self.speed))
 
             debugList.append((self.x,round((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
-            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in [" "]: 
+            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y-=self.speed/4
             else:
                 self.dir = "wait"
@@ -546,7 +547,7 @@ class Rat(GameObject):
             debugList.append((round((x_new+(0.5*self.xdir))/TILE_W)*TILE_W,round(self.y/TILE_H)*TILE_H))
 
             #check the tile in the walking direction
-            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in[" "]:
+            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in lu_bg_tiles:
 
                 self.x+=(self.speed*self.xdir)
             else:
