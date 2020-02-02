@@ -4,6 +4,8 @@ import random
 
 from bitmapfont import BitmapFont
 
+import os
+
 
 SCR_W = 320
 SCR_H = 176
@@ -78,7 +80,6 @@ def load_level(path):
     
     return lvl
 
-level = load_level("./lvl/001.lvl")
 
 LEV_W = len(level[0])
 LEV_H = len(level)
@@ -698,11 +699,33 @@ def count_tools():
     return count
     
 
+levels={}
+
+
+
+def load_all_levels():
+    for root,folders,files in os.walk("./lvl"):
+        for file in files:
+            idx= file.find(".lvl")
+            if idx != -1:
+                print(file[:idx])
+                levels[file[:idx]]= load_level(os.path.join("./lvl",file))
+    
+
+
+
 def init():
     setState(STATE_GAME)
     
+    load_all_levels()
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/005.lvl")
+
+    
+    level = levels[random.choice(levels.keys())]
+    
+
+
+
 
     LEV_W = len(level[0])
     LEV_H = len(level)
