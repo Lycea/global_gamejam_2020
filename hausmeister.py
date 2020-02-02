@@ -722,7 +722,7 @@ def init():
     global level, LEV_W, LEV_H
 
     
-    level = levels[random.choice(levels.keys())]
+    level = levels[random.choice(list(levels.keys()))]
     
 
 
