@@ -24,7 +24,7 @@ CONTROLS:
 
 
 ## Level character legend
-
+"@" = Player<br>
 "#" = 100% Wall<br>
 "H" = Leader<br>
 "L" = Lamp<br>
