@@ -282,6 +282,9 @@ class Player(GameObject):
                         print("restart quest")
                         collectible.reinit()
                         
+                        global playtime
+                        playtime += 20 * FPS
+                        
                         sfx['repair'].play()
                         return
                 
@@ -408,11 +411,9 @@ class Player(GameObject):
                 elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
                     newydir = 0
                     self.jumpBlocked = False
-                    newxdir = 1
                 elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
                     newydir = 0
                     self.jumpBlocked = False
-                    newxdir = -1
 
         self.y += newydir
         
@@ -714,7 +715,7 @@ def init():
 
     global score, playtime
     score = 0
-    playtime = 90 * FPS
+    playtime = 20 * FPS
     
     global TOOL_ORDER, toolno
     TOOL_ORDER = list(range(NUM_TOOLS +1))
