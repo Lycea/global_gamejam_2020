@@ -31,5 +31,9 @@ CONTROLS:
 "-" = 50% Wall<br>
 "R" = Rat<br>
 "S" = Spider<br>
-" " = Empty<br>
+" " = Background<br>
+"," = Alternative Background<br>
+"." = Window<br>
+"D" = Door<br>
+"O" = Collectible Object<br>
 "/" = Simple line ending ... for more simple editing<br>
