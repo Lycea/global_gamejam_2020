@@ -282,6 +282,9 @@ class Player(GameObject):
                         print("restart quest")
                         collectible.reinit()
                         
+                        global playtime
+                        playtime += 20 * FPS
+                        
                         sfx['repair'].play()
                         return
                 
@@ -689,7 +692,7 @@ def init():
     setState(STATE_GAME)
     
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/002.lvl")
+    level = load_level("./lvl/001.lvl")
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -714,7 +717,7 @@ def init():
 
     global score, playtime
     score = 0
-    playtime = 90 * FPS
+    playtime = 20 * FPS
     
     global TOOL_ORDER, toolno
     TOOL_ORDER = list(range(NUM_TOOLS +1))
