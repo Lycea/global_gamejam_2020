@@ -125,13 +125,13 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          'TOOL9': pygame.image.load('gfx/tool_9.png'),
          }
          
-music = pygame.mixer.Sound('snd/music.ogg')
+music = pygame.mixer.Sound('snd/music.wav')
 music.play(-1)
 
-sfx = {'jump': pygame.mixer.Sound('snd/sfx-jump.ogg'),
-       'collect': pygame.mixer.Sound('snd/sfx-collect.ogg'),
-       'repair': pygame.mixer.Sound('snd/sfx-repair.ogg'),
-       'drop': pygame.mixer.Sound('snd/sfx-drop.ogg'),
+sfx = {'jump': pygame.mixer.Sound('snd/sfx-jump.wav'),
+       'collect': pygame.mixer.Sound('snd/sfx-collect.wav'),
+       'repair': pygame.mixer.Sound('snd/sfx-repair.wav'),
+       'drop': pygame.mixer.Sound('snd/sfx-drop.wav'),
        }
          
          
@@ -690,11 +690,19 @@ def setState(s):
     statecnt = 0
 
 
+def count_tools():
+    count = 0
+    for c in collectibles:
+        if type(c) is not RepairPoint:
+            count += 1
+    return count
+    
+
 def init():
     setState(STATE_GAME)
     
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/002.lvl")
+    level = load_level("./lvl/005.lvl")
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -719,7 +727,10 @@ def init():
 
     global score, playtime
     score = 0
-    playtime = 20 * FPS
+    playtime = 30 * FPS
+    
+    global NUM_TOOLS
+    NUM_TOOLS = count_tools()
     
     global TOOL_ORDER, toolno
     TOOL_ORDER = list(range(NUM_TOOLS +1))
@@ -738,9 +749,9 @@ def controls():
             if e.key == pygame.K_ESCAPE:
                 return False
                 
-            if e.key == pygame.K_s:
-                player.doJump()
             if e.key == pygame.K_a:
+                player.doJump()
+            if e.key == pygame.K_s:
                 player.interact()
 
             if e.key == pygame.K_LEFT:
@@ -767,7 +778,7 @@ def controls():
             if e.key == pygame.K_DOWN:
                 player.stopDown()
                 
-            if e.key == pygame.K_s:
+            if e.key == pygame.K_a:
                 player.cancelJump()
                 
             if e.key == pygame.K_F11:
@@ -806,13 +817,13 @@ def controls():
                         player.stopDown()
                         
         if e.type == pygame.JOYBUTTONDOWN:
-            if e.button == 0:
+            if e.button == 1:
                 player.doJump()
-            elif e.button == 1:
+            elif e.button == 0:
                 player.interact()
             
         if e.type == pygame.JOYBUTTONUP:
-            if e.button == 0:
+            if e.button == 1:
                 player.cancelJump()
                 
     return True
