@@ -254,7 +254,7 @@ class GameObject():
         
 class Player(GameObject):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        GameObject.__init__(self,x, y)
         
         self.climb = False
         self.objects=[]
@@ -266,12 +266,12 @@ class Player(GameObject):
         print("Trying to interact...")
         for collectible in collectibles:
             
-            if type(collectible) == Collectible and collectible.collides(self) and len(self.objects)<=self.max_objects:
+            if isinstance(collectible, Collectible) and collectible.collides(self) and len(self.objects)<=self.max_objects:
                 self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
                 
                 sfx['collect'].play()
                 
-            elif type(collectible) == RepairPoint and collectible.collides(self):
+            elif isinstance(collectible, RepairPoint) and collectible.collides(self):
                 for collected in self.objects:
                     if collected.item_type == collectible.item_type :
                         print("increasing score")
@@ -457,7 +457,7 @@ class Spider(GameObject):
     def _find_nearest_ceil(self):
         for search_y in range(int(self.y/TILE_H),0,-1):
                       
-            if level[search_y][round(self.x/TILE_W)] in lu_wall_tiles:
+            if level[search_y][int(self.x/TILE_W)] in lu_wall_tiles:
                 self.ceil = search_y
                 return
         
@@ -466,7 +466,7 @@ class Spider(GameObject):
 
 
     def __init__(self,x,y):
-        super().__init__(x,y)
+        GameObject.__init__(self,x,y)
         self.dir = "down"
         self.tile = "S"
 
@@ -507,7 +507,7 @@ class Spider(GameObject):
         
 
         if self.dir == "down":
-            if level[round(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in lu_bg_tiles: 
+            if level[int(self.y / TILE_H + self.speed)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y+=self.speed
             else:
                 self.dir = "up"
@@ -515,8 +515,8 @@ class Spider(GameObject):
         elif self.dir == "up":
             debugList.append((self.x,self.y-self.speed))
 
-            debugList.append((self.x,round((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
-            if level[round((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in lu_bg_tiles: 
+            debugList.append((self.x,int((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
+            if level[int((self.y-self.speed-0.5*TILE_H)/TILE_H)][int(self.x / TILE_W)] in lu_bg_tiles: 
                 self.y-=self.speed/4
             else:
                 self.dir = "wait"
@@ -535,7 +535,7 @@ class Spider(GameObject):
 
 class Rat(GameObject):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        GameObject.__init__(self,x, y)
         self.xdir = -1
         self.speed = 1.5
         self.flip = False
@@ -558,16 +558,16 @@ class Rat(GameObject):
         
         x_new = self.x+self.speed*self.xdir
 
-        debugList.append(( round(x_new/TILE_W)*TILE_W,self.y))
+        debugList.append(( int(x_new/TILE_W)*TILE_W,self.y))
         #check boundaries left and right
         if x_new >0 and x_new<SCR_W-TILE_W:
             
             
 
-            debugList.append((round((x_new+(0.5*self.xdir))/TILE_W)*TILE_W,round(self.y/TILE_H)*TILE_H))
+            debugList.append((int((x_new+(0.5*self.xdir))/TILE_W)*TILE_W,int(self.y/TILE_H)*TILE_H))
 
             #check the tile in the walking direction
-            if level[round(self.y/TILE_H)][round((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[round(self.y/TILE_H)+1][round((x_new+(0.5*self.xdir))/TILE_W)] not in lu_bg_tiles:
+            if level[int(self.y/TILE_H)][int((x_new+(0.5*self.xdir))/TILE_W)] not in ["#","-"] and level[int(self.y/TILE_H)+1][int((x_new+(0.5*self.xdir))/TILE_W)] not in lu_bg_tiles:
 
                 self.x+=(self.speed*self.xdir)
             else:
@@ -581,14 +581,14 @@ class Rat(GameObject):
 
 class Collectible(GameObject):
     def __init__(self,x,y,item_type=None):
-        super().__init__(x,y)
+        GameObject.__init__(self,x,y)
         self.stack_size = 0
         self.item_type = item_type or "BOX"
         
 
 class Collected(GameObject):
     def __init__(self,x,y,item_type=None):
-        super().__init__(x,y)
+        GameObject.__init__(self,x,y)
 
         self.item_type = item_type or "BOX"
 
@@ -598,7 +598,7 @@ class Collected(GameObject):
 
 class Particle(GameObject):
     def __init__(self,x,y,item_type=None):
-        super().__init__(x,y)
+        GameObject.__init__(self,x,y)
 
         self.item_type = item_type or "BOX"
 
@@ -618,7 +618,7 @@ class Particle(GameObject):
 
 class RepairPoint(GameObject):
     def __init__(self,x,y,item_type=None):
-        super().__init__(x,y)
+        GameObject.__init__(self,x,y)
         
         self.timer = 1
         self.item_type = None
@@ -689,7 +689,7 @@ def setState(s):
 def count_tools():
     count = 0
     for c in collectibles:
-        if type(c) is not RepairPoint:
+        if not isinstance(c, RepairPoint):
             count += 1
     return count
     
@@ -709,11 +709,11 @@ def init():
     
     global player
     for e in entities:
-        if type(e) is Player:
+        if isinstance(e, Player):
             player = e
             entities.remove(e)
             break
-
+    
     global debugList
     debugList = []
 
@@ -875,7 +875,7 @@ def render():
     for collectible in collectibles:
         #collectible.collides(player)
         
-        if type(collectible) is RepairPoint:
+        if isinstance(collectible, RepairPoint):
             if int(tick % 40 / 20):
                 continue
         else:
