@@ -22,6 +22,9 @@ CONTROLS:
 - jump with key "A" or with a button on your gamecontroller
 - collect / use items with key "S" or with a button on your gamecontroller
 
+MODDABLE:
+- it's easy to create you own levels, just copy one of the existing ones
+  from the 'lvl' folder. levels are always chosen randomly.
 
 ## Level character legend
 "@" = Player<br>
