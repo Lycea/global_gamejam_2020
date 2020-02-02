@@ -953,7 +953,8 @@ def update():
         player.update()
 
         global playtime
-        playtime -= 1
+        if scrolly > player.y - SCR_H:
+            playtime -= 1
         
         if playtime == 0:
            setState(STATE_GAMEOVER)
