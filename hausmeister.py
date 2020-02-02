@@ -42,9 +42,10 @@ statecnt = 0
 pygame.display.init()
 
 if FULLSCREEN:
-    WIN_W, WIN_H =  pygame.display.list_modes()[0]
+    window = pygame.display.set_mode(pygame.display.list_modes()[0], pygame.FULLSCREEN)
+else:
+    window = pygame.display.set_mode((WIN_W, WIN_H), 0)
 
-window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
 screen = pygame.Surface((SCR_W, SCR_H))
 
 clock = pygame.time.Clock()
@@ -169,7 +170,10 @@ debugSprite = pygame.image.load('gfx/debug.png')
 def toggleFullscreen():
     global FULLSCREEN, window
     FULLSCREEN = not FULLSCREEN
-    window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
+    if FULLSCREEN:
+        window = pygame.display.set_mode(pygame.display.list_modes()[0], pygame.FULLSCREEN)
+    else:
+        window = pygame.display.set_mode((WIN_W, WIN_H), 0)
 
 
 
@@ -1009,7 +1013,7 @@ while running:
     
     render()
     
-    pygame.transform.scale(screen, (WIN_W, WIN_H), window)
+    pygame.transform.scale(screen, window.get_size(), window)
     pygame.display.flip()
     
     cont = controls()
