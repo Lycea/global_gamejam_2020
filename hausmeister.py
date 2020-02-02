@@ -271,7 +271,8 @@ class Player(GameObject):
         for collectible in collectibles:
             
             if isinstance(collectible, Collectible) and collectible.collides(self) and len(self.objects)<=self.max_objects:
-                self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
+                if (self.objects and self.objects[-1].item_type != collectible.item_type) or not self.objects:
+                    self.objects.append(Collected(self.x+8,self.y+8,collectible.item_type))
                 
                 sfx['collect'].play()
                 
@@ -287,7 +288,7 @@ class Player(GameObject):
                         collectible.reinit()
                         
                         global playtime
-                        playtime += 20 * FPS
+                        playtime += 15 * FPS
                         
                         sfx['repair'].play()
                         return
