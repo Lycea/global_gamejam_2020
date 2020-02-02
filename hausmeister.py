@@ -411,11 +411,9 @@ class Player(GameObject):
                 elif colltile3 in OBSTACLES and colltile4 not in OBSTACLES:
                     newydir = 0
                     self.jumpBlocked = False
-                    newxdir = 1
                 elif colltile3 not in OBSTACLES and colltile4 in OBSTACLES:
                     newydir = 0
                     self.jumpBlocked = False
-                    newxdir = -1
 
         self.y += newydir
         
@@ -692,7 +690,7 @@ def init():
     setState(STATE_GAME)
     
     global level, LEV_W, LEV_H
-    level = load_level("./lvl/001.lvl")
+    level = load_level("./lvl/002.lvl")
 
     LEV_W = len(level[0])
     LEV_H = len(level)
