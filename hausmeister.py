@@ -644,8 +644,6 @@ def get_entities(level):
     tmp_entities =[]
     tmp_objects = []
     
-    global toolno
-
     y=0
     for line in level:
         x=0
@@ -670,9 +668,8 @@ def get_entities(level):
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "O":
-                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % TOOL_ORDER[toolno % NUM_TOOLS]))
-                toolno += 1
-                
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H))
+
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
@@ -699,6 +696,12 @@ def count_tools():
             count += 1
     return count
     
+def distribute_tools():
+    toolno = 0
+    for c in collectibles:
+        if not isinstance(c, RepairPoint):
+             c.item_type = 'TOOL%i' % TOOL_ORDER[toolno]
+             toolno += 1
 
 levels=[]
 levelno = 0
@@ -764,6 +767,8 @@ def init():
     TOOL_ORDER = list(range(NUM_TOOLS +1))
     random.shuffle(TOOL_ORDER)
     TOOL_ORDER.remove(0)
+    
+    distribute_tools()
 
     toolno = 0
 
