@@ -16,7 +16,7 @@ TILE_H = 16
 
 FPS = 60
 
-FULLSCREEN = False
+FULLSCREEN = True
 
 DEBUG_MODE = False
 
@@ -36,6 +36,10 @@ statecnt = 0
 
 
 pygame.display.init()
+
+if FULLSCREEN:
+    WIN_W, WIN_H =  pygame.display.list_modes()[0]
+
 window = pygame.display.set_mode((WIN_W, WIN_H), pygame.FULLSCREEN if FULLSCREEN else 0)
 screen = pygame.Surface((SCR_W, SCR_H))
 
