@@ -10,15 +10,15 @@ import os
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 1366
-WIN_H = 768
+WIN_W = 640
+WIN_H = 360
 
 TILE_W = 16
 TILE_H = 16
 
 FPS = 60
 
-FULLSCREEN = True
+FULLSCREEN = False
 
 DEBUG_MODE = False
 
@@ -109,7 +109,8 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
          'H': pygame.image.load('gfx/stairs.png'),
-         'L': pygame.image.load('gfx/lamp.png'),
+         'L': pygame.image.load('gfx/lamp_1.png'),
+         'U': pygame.image.load('gfx/lamp_2.png'),
          'R': pygame.image.load('gfx/rat.png'),
          'S': pygame.image.load('gfx/spider.png'),
          "BOX":pygame.image.load('gfx/box.png'),
@@ -644,13 +645,10 @@ def get_entities(level):
     tmp_entities =[]
     tmp_objects = []
     
-    global toolno
-
     y=0
     for line in level:
         x=0
-        for char in line:
-            
+        for char in line:			
             if char == "R":
                 tmp_entities.append(Rat(x * TILE_W, y * TILE_H))
 
@@ -670,9 +668,8 @@ def get_entities(level):
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "O":
-                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % TOOL_ORDER[toolno]))
-                toolno += 1
-                
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H))
+
                 tmp_str =list(level[y])
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
@@ -699,19 +696,30 @@ def count_tools():
             count += 1
     return count
     
+def distribute_tools():
+    toolno = 0
+    for c in collectibles:
+        if not isinstance(c, RepairPoint):
+             c.item_type = 'TOOL%i' % TOOL_ORDER[toolno]
+             toolno += 1
 
-levels={}
-
+levels=[]
+levelno = 0
 
 
 def load_all_levels():
+    global levels
+    levels = []
+    
     for root,folders,files in os.walk("./lvl"):
         for file in files:
             idx= file.find(".lvl")
             if idx != -1:
                 print(file[:idx])
-                levels[file[:idx]]= load_level(os.path.join("./lvl",file))
+                level = load_level(os.path.join("./lvl",file))
+                levels.append(level)
     
+    random.shuffle(levels)
 
 
 
@@ -721,10 +729,12 @@ def init():
     load_all_levels()
     global level, LEV_W, LEV_H
 
-    
-    level = levels[random.choice(list(levels.keys()))]
-    
 
+    global levelno
+    level = levels[levelno]
+    levelno += 1
+    if levelno == len(levels):
+        levelno = 0    
 
 
 
@@ -760,6 +770,8 @@ def init():
     TOOL_ORDER = list(range(NUM_TOOLS +1))
     random.shuffle(TOOL_ORDER)
     TOOL_ORDER.remove(0)
+    
+    distribute_tools()
 
     toolno = 0
 
@@ -885,8 +897,15 @@ def render():
         for x in range(LEV_W):
             tile = level[y][x]
             
-            if tile in tiles:                
-                screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
+            if tile in tiles:     
+                if tile in "L":
+                    screen.blit(tiles[" "], (x * TILE_W, y * TILE_H - scrolly))
+                    if statecnt % 8 < 7:
+                        screen.blit(tiles["U"], (x * TILE_W, y * TILE_H - scrolly))
+                    else:
+                        screen.blit(tiles["L"], (x * TILE_W, y * TILE_H - scrolly))
+                else:
+                    screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
         if entity.tile == "S":
@@ -953,7 +972,8 @@ def update():
         player.update()
 
         global playtime
-        playtime -= 1
+        if scrolly > player.y - SCR_H:
+            playtime -= 1
         
         if playtime == 0:
            setState(STATE_GAMEOVER)
