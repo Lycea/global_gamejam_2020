@@ -522,7 +522,7 @@ class Spider(GameObject):
 
             debugList.append((self.x,int((self.y-self.speed-0.5*TILE_H)/TILE_H)*TILE_H))
             if level[int(round((self.y-self.speed-0.5*TILE_H)/TILE_H))][int(self.x / TILE_W)] in lu_bg_tiles: 
-                self.y-=self.speed * 0.25
+                self.y-=self.speed * 0.5
             else:
                 self.dir = "wait"
                 self.wait_frames = 40
