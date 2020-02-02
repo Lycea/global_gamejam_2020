@@ -670,7 +670,7 @@ def get_entities(level):
                 tmp_str[x]=" "
                 level[y]="".join(tmp_str)
             elif char == "O":
-                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % TOOL_ORDER[toolno]))
+                tmp_objects.append(Collectible(x*TILE_H,y*TILE_H, 'TOOL%i' % TOOL_ORDER[toolno % NUM_TOOLS]))
                 toolno += 1
                 
                 tmp_str =list(level[y])
@@ -700,18 +700,23 @@ def count_tools():
     return count
     
 
-levels={}
-
+levels=[]
+levelno = 0
 
 
 def load_all_levels():
+    global levels
+    levels = []
+    
     for root,folders,files in os.walk("./lvl"):
         for file in files:
             idx= file.find(".lvl")
             if idx != -1:
                 print(file[:idx])
-                levels[file[:idx]]= load_level(os.path.join("./lvl",file))
+                level = load_level(os.path.join("./lvl",file))
+                levels.append(level)
     
+    random.shuffle(levels)
 
 
 
@@ -721,12 +726,11 @@ def init():
     load_all_levels()
     global level, LEV_W, LEV_H
 
-    
-    level = levels[random.choice(levels.keys())]
-    
-
-
-
+    global levelno
+    level = levels[levelno]
+    levelno += 1
+    if levelno == len(levels):
+        levelno = 0    
 
     LEV_W = len(level[0])
     LEV_H = len(level)
