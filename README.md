@@ -21,6 +21,7 @@ CONTROLS:
   gamecontroller
 - jump with key "A" or with a button on your gamecontroller
 - collect / use items with key "S" or with a button on your gamecontroller
+- hit Alt + Enter for fullscreen toggle
 
 MODDABLE:
 - it's easy to create you own levels, just copy one of the existing ones
