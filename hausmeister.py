@@ -10,15 +10,15 @@ import os
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 1366
-WIN_H = 768
+WIN_W = 640
+WIN_H = 360
 
 TILE_W = 16
 TILE_H = 16
 
 FPS = 60
 
-FULLSCREEN = True
+FULLSCREEN = False
 
 DEBUG_MODE = False
 
@@ -109,7 +109,8 @@ tiles = {'#': pygame.image.load('gfx/wall.png'),
          '=': pygame.image.load('gfx/floor_2.png'),
          'D': pygame.image.load('gfx/door.png'),
          'H': pygame.image.load('gfx/stairs.png'),
-         'L': pygame.image.load('gfx/lamp.png'),
+         'L': pygame.image.load('gfx/lamp_1.png'),
+         'U': pygame.image.load('gfx/lamp_2.png'),
          'R': pygame.image.load('gfx/rat.png'),
          'S': pygame.image.load('gfx/spider.png'),
          "BOX":pygame.image.load('gfx/box.png'),
@@ -647,8 +648,7 @@ def get_entities(level):
     y=0
     for line in level:
         x=0
-        for char in line:
-            
+        for char in line:			
             if char == "R":
                 tmp_entities.append(Rat(x * TILE_W, y * TILE_H))
 
@@ -734,6 +734,7 @@ def init():
     levelno += 1
     if levelno == len(levels):
         levelno = 0    
+
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -894,8 +895,15 @@ def render():
         for x in range(LEV_W):
             tile = level[y][x]
             
-            if tile in tiles:                
-                screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
+            if tile in tiles:     
+                if tile in "L":
+                    screen.blit(tiles[" "], (x * TILE_W, y * TILE_H - scrolly))
+                    if statecnt % 8 < 7:
+                        screen.blit(tiles["U"], (x * TILE_W, y * TILE_H - scrolly))
+                    else:
+                        screen.blit(tiles["L"], (x * TILE_W, y * TILE_H - scrolly))
+                else:
+                    screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
     
     for entity in entities:
         if entity.tile == "S":
