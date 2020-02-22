@@ -937,10 +937,13 @@ def controls():
                         player.stopDown()
                         
         if e.type == pygame.JOYBUTTONDOWN:
-            if e.button == 1:
-                player.doJump()
-            elif e.button == 0:
-                player.interact()
+            if state == STATE_TITLE:
+                nextLevel()
+            else:
+                if e.button == 1:
+                    player.doJump()
+                elif e.button == 0:
+                    player.interact()
             
         if e.type == pygame.JOYBUTTONUP:
             if e.button == 1:
