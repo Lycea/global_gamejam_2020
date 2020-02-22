@@ -737,13 +737,12 @@ def load_all_levels():
     global levels
     levels = []
     
-    for root,folders,files in os.walk("./lvl"):
-        for file in files:
-            idx= file.find(".lvl")
-            if idx != -1:
-                print(file[:idx])
-                level = load_level(os.path.join("./lvl",file))
-                levels.append(level)
+    for file in sorted(os.listdir('./lvl/')):
+        idx= file.find(".lvl")
+        if idx != -1:
+            print(file[:idx])
+            level = load_level(os.path.join("./lvl",file))
+            levels.append(level)
             
     #random.shuffle(levels)
 
