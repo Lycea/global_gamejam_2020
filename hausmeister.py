@@ -10,10 +10,10 @@ import os
 
 
 SCR_W = 320
-SCR_H = 176
+SCR_H = 256
 
 WIN_W = 1280
-WIN_H = 720
+WIN_H = 1024
 
 TILE_W = 16
 TILE_H = 16
@@ -32,9 +32,10 @@ NUM_TOOLS = 9
 STATE_GAME = 0
 STATE_GAMEOVER = 1
 STATE_LEVELFINISHED = 2
+STATE_TITLE = 3
 
 
-state = STATE_GAME
+state = STATE_TITLE
 statecnt = 0
 
 
@@ -59,7 +60,7 @@ for i in range(pygame.joystick.get_count()):
     
 pygame.mouse.set_visible(False)
 
-font = BitmapFont('gfx/heimatfont.png', scr_w=SCR_W, scr_h=SCR_H, colors=[(255,255,255), (240,0,240)])
+font = BitmapFont('gfx/heimatfont.png', scr_w=SCR_W, scr_h=SCR_H, colors=[(255,255,255), (240,0,240), (240,240,0)])
 
 
 level = ['                    ',
@@ -73,6 +74,25 @@ level = ['                    ',
          '                    ',
          '                    ',
          '####################'
+         ]
+         
+         
+title = ['#########=-#-#######',
+         '######=--  L  ######',
+         '##--=-,       -=-###',
+         '#- ,             -##',
+         '#          ,    , ##',
+         '####--=     ,     -#',
+         '##=-  S            #',
+         '##@             ####',
+         '###    ,      ######',
+         '#####       ########',
+         '####################',
+         '####-=----==--=-####',
+         '--=-    ,       -=--',
+         '    , .  .  .    ,  ',
+         'R            ,      ',
+         '####################',
          ]
 
 
@@ -99,7 +119,6 @@ scroll = False
 
 score = 0
 playtime = 90 * FPS
-haswon = False
 toolstogo = 0
 
 player = None
@@ -304,8 +323,6 @@ class Player(GameObject):
                         toolstogo -= 1
                         if toolstogo == 0:
                             setState(STATE_LEVELFINISHED)
-                            global haswon
-                            haswon = True
                         
                         #global playtime
                         #playtime += 15 * FPS
@@ -736,6 +753,8 @@ def load_all_levels():
     global levels
     levels = []
     
+    levels.append(list(title))  # copy title level in order to reset it
+    
     for file in sorted(os.listdir('./lvl/')):
         idx= file.find(".lvl")
         if idx != -1:
@@ -766,23 +785,30 @@ def prerenderLevel():
                 buffer.blit(tiles[tile], (x * TILE_W, (y - bufferno * int(SCR_H / TILE_H)) * TILE_H))
 
 
-def init():
+def nextLevel():
     setState(STATE_GAME)
-    
     load_all_levels()
-    global level, LEV_W, LEV_H
-
 
     global levelno
-    global haswon
-    
-    if haswon:
-        levelno += 1
-        if levelno == len(levels):
-            levelno = 0
-            haswon = False
-            # TODO game completed
 
+    levelno += 1
+    if levelno == len(levels):
+        levelno = 0
+        # TODO game completed
+
+    init(levelno)
+    
+    
+def backToTitle():
+    setState(STATE_TITLE)
+    load_all_levels()
+    global levelno
+    levelno = 0
+    init(levelno)
+
+
+def init(levelno):
+    global level, LEV_W, LEV_H
     level = levels[levelno]
 
     LEV_W = len(level[0])
@@ -837,10 +863,17 @@ def controls():
                 return False
                 
             if e.key == pygame.K_a:
-                player.doJump()
+                if state == STATE_TITLE:
+                    nextLevel()
+                else:
+                    player.doJump()
+            
             if e.key == pygame.K_s:
-                player.interact()
-
+                if state == STATE_TITLE:
+                    nextLevel()
+                else:
+                    player.interact()
+            
             if e.key == pygame.K_LEFT:
                 player.moveLeft()
             if e.key == pygame.K_RIGHT:
@@ -915,6 +948,14 @@ def controls():
                 
     return True
     
+    
+def renderTitle():
+    font.centerText(screen, 'HORROR HOTEL HAUSMEISTER', 7, fgcolor=(255,255,255))
+    
+    if int(tick % 40 / 20):
+        font.drawText(screen, 'PRESS BUTTON', 18, 10, fgcolor=(240,240,0))
+    
+    
 def render():
     screen.fill((0, 0, 0))
     
@@ -982,6 +1023,7 @@ def render():
 
 
     anim_frame = int(tick % 20 / 10)
+    
     for collected_num in range(len(player.objects)):
         player.objects[collected_num].x = player.x
         player.objects[collected_num].y = player.y - player.objects[collected_num].height*(collected_num+1)*0.75 -4
@@ -990,9 +1032,13 @@ def render():
         scaled_sprite = pygame.transform.scale(tiles[player.objects[collected_num].item_type],(player.objects[collected_num].width,player.objects[collected_num].height))
         screen.blit(scaled_sprite,(player.objects[collected_num].x  ,player.objects[collected_num].y-scrolly+anim_frame))
 
+
+    if state != STATE_TITLE:    
+        spr = playerSprites[player.facedir][anim_frame]
+        screen.blit(spr, (player.x, player.y - scrolly))
     
-    spr = playerSprites[player.facedir][anim_frame]
-    screen.blit(spr, (player.x, player.y - scrolly))
+        font.drawText(screen, 'SCORE: %i' % score, 0, 0, fgcolor=(255,255,255))#, bgcolor=(0,0,0))
+        font.drawText(screen, 'TIME: %02i' % (playtime / FPS), 30, 0, fgcolor=(255,255,255))
 
     if DEBUG_MODE:
         global debugList
@@ -1001,10 +1047,6 @@ def render():
         
     debugList = []
     
-    font.drawText(screen, 'SCORE: %i' % score, 0, 0, fgcolor=(255,255,255))#, bgcolor=(0,0,0))
-    font.drawText(screen, 'TIME: %02i' % (playtime / FPS), 30, 0, fgcolor=(255,255,255))
-
-
     if state == STATE_GAMEOVER:
         if int(tick % 20 / 10):
             font.centerText(screen, 'TIME IS UP', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
@@ -1013,6 +1055,8 @@ def render():
         if int(tick % 20 / 10):
             font.centerText(screen, 'LEVEL FINISHED', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
 
+    if state == STATE_TITLE:
+        renderTitle()
 
 def update():
 
@@ -1048,7 +1092,7 @@ def update():
 tick = 0
 running = True
 
-init()
+backToTitle()
 
 while running:
     tick += 1
@@ -1069,11 +1113,11 @@ while running:
 
     if state == STATE_GAMEOVER:
         if statecnt == 3 * FPS:
-            init()
+            backToTitle()
             
     if state == STATE_LEVELFINISHED:
         if statecnt == 3 * FPS:
-            init()
+            nextLevel()
             
     clock.tick(FPS)
 
