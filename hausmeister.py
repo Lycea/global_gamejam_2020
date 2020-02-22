@@ -31,6 +31,7 @@ NUM_TOOLS = 9
 
 STATE_GAME = 0
 STATE_GAMEOVER = 1
+STATE_LEVELFINISHED = 2
 
 
 state = STATE_GAME
@@ -99,6 +100,7 @@ scroll = False
 score = 0
 playtime = 90 * FPS
 haswon = False
+toolstogo = 0
 
 player = None
 
@@ -297,6 +299,14 @@ class Player(GameObject):
                         self.objects.remove(collected)
                         print("restart quest")
                         collectible.reinit()
+                        
+                        global toolstogo
+                        toolstogo -= 1
+                        print toolstogo, ' tools to go'
+                        if toolstogo == 0:
+                            setState(STATE_LEVELFINISHED)
+                            global haswon
+                            haswon = True
                         
                         #global playtime
                         #playtime += 15 * FPS
@@ -647,7 +657,7 @@ class RepairPoint(GameObject):
             self.item_type = 'TOOL%i' % int(random.random() * NUM_TOOLS +1)
 
     def reinit(self):
-        self.timer = int(random.random() * 20*FPS) + 2*FPS
+        #self.timer = int(random.random() * 20*FPS) + 2*FPS
         self.item_type = None
 
 def get_entities(level):
@@ -702,6 +712,13 @@ def count_tools():
     count = 0
     for c in collectibles:
         if not isinstance(c, RepairPoint):
+            count += 1
+    return count
+
+def count_repairpoints():
+    count = 0
+    for c in collectibles:
+        if isinstance(c, RepairPoint):
             count += 1
     return count
     
@@ -759,11 +776,13 @@ def init():
 
 
     global levelno
+    global haswon
     
     if haswon:
         levelno += 1
         if levelno == len(levels):
             levelno = 0
+            haswon = False
             # TODO game completed
 
     level = levels[levelno]
@@ -795,6 +814,8 @@ def init():
     
     global NUM_TOOLS
     NUM_TOOLS = count_tools()
+    global toolstogo
+    toolstogo = count_repairpoints()
     
     global TOOL_ORDER, toolno
     TOOL_ORDER = list(range(NUM_TOOLS +1))
@@ -903,6 +924,11 @@ def render():
         if statecnt > 2 * FPS:
             font.centerText(screen, 'TIME IS UP', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
             return
+            
+    if state == STATE_LEVELFINISHED:
+        if statecnt > 2 * FPS:
+            font.centerText(screen, 'LEVEL FINISHED', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
+            return
                 
     global scrolly, scroll
     camy = player.y - SCR_H * 0.5
@@ -984,6 +1010,10 @@ def render():
     if state == STATE_GAMEOVER:
         if int(tick % 20 / 10):
             font.centerText(screen, 'TIME IS UP', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
+            
+    if state == STATE_LEVELFINISHED:
+        if int(tick % 20 / 10):
+            font.centerText(screen, 'LEVEL FINISHED', SCR_H / 2 / font.font_h, fgcolor=(255,255,255))
 
 
 def update():
@@ -1040,6 +1070,10 @@ while running:
     statecnt += 1
 
     if state == STATE_GAMEOVER:
+        if statecnt == 3 * FPS:
+            init()
+            
+    if state == STATE_LEVELFINISHED:
         if statecnt == 3 * FPS:
             init()
             
