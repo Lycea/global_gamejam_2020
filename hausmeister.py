@@ -98,6 +98,7 @@ scroll = False
 
 score = 0
 playtime = 90 * FPS
+haswon = False
 
 player = None
 
@@ -297,8 +298,8 @@ class Player(GameObject):
                         print("restart quest")
                         collectible.reinit()
                         
-                        global playtime
-                        playtime += 15 * FPS
+                        #global playtime
+                        #playtime += 15 * FPS
                         
                         sfx['repair'].play()
                         return
@@ -727,7 +728,7 @@ def load_all_levels():
                 level = load_level(os.path.join("./lvl",file))
                 levels.append(level)
             
-    random.shuffle(levels)
+    #random.shuffle(levels)
 
 
 def prerenderLevel():
@@ -758,10 +759,14 @@ def init():
 
 
     global levelno
+    
+    if haswon:
+        levelno += 1
+        if levelno == len(levels):
+            levelno = 0
+            # TODO game completed
+
     level = levels[levelno]
-    levelno += 1
-    if levelno == len(levels):
-        levelno = 0    
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -786,7 +791,7 @@ def init():
 
     global score, playtime
     score = 0
-    playtime = 30 * FPS
+    playtime = 90 * FPS
     
     global NUM_TOOLS
     NUM_TOOLS = count_tools()
