@@ -302,7 +302,6 @@ class Player(GameObject):
                         
                         global toolstogo
                         toolstogo -= 1
-                        print toolstogo, ' tools to go'
                         if toolstogo == 0:
                             setState(STATE_LEVELFINISHED)
                             global haswon
