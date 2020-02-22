@@ -12,8 +12,8 @@ import os
 SCR_W = 320
 SCR_H = 176
 
-WIN_W = 640
-WIN_H = 360
+WIN_W = 1280
+WIN_H = 720
 
 TILE_W = 16
 TILE_H = 16
@@ -181,6 +181,8 @@ LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
+
+levelBuffers = []
 
 
 
@@ -724,9 +726,28 @@ def load_all_levels():
                 print(file[:idx])
                 level = load_level(os.path.join("./lvl",file))
                 levels.append(level)
-    
+            
     random.shuffle(levels)
 
+
+def prerenderLevel():
+    global level
+    global levelBuffers
+    
+    levelBuffers = []
+    
+    for i in range(int(LEV_H * TILE_H / SCR_H) +1):
+        levelBuffers.append(pygame.Surface((SCR_W, SCR_H)))
+
+    for y in range(LEV_H):
+        bufferno = int((y * TILE_H) / SCR_H)
+        buffer = levelBuffers[bufferno]
+    
+        for x in range(LEV_W):
+            tile = level[y][x]
+            
+            if tile in tiles:     
+                buffer.blit(tiles[tile], (x * TILE_W, (y - bufferno * int(SCR_H / TILE_H)) * TILE_H))
 
 
 def init():
@@ -741,8 +762,6 @@ def init():
     levelno += 1
     if levelno == len(levels):
         levelno = 0    
-
-
 
     LEV_W = len(level[0])
     LEV_H = len(level)
@@ -780,6 +799,8 @@ def init():
     distribute_tools()
 
     toolno = 0
+    
+    prerenderLevel()
 
 
 def controls():
@@ -898,20 +919,8 @@ def render():
         scroll = False
         scrolly =LEV_H * TILE_H -SCR_H
 
-
-    for y in range(LEV_H):
-        for x in range(LEV_W):
-            tile = level[y][x]
-            
-            if tile in tiles:     
-                if tile in "L":
-                    screen.blit(tiles[" "], (x * TILE_W, y * TILE_H - scrolly))
-                    if statecnt % 8 < 7:
-                        screen.blit(tiles["U"], (x * TILE_W, y * TILE_H - scrolly))
-                    else:
-                        screen.blit(tiles["L"], (x * TILE_W, y * TILE_H - scrolly))
-                else:
-                    screen.blit(tiles[tile], (x * TILE_W, y * TILE_H - scrolly))
+    screen.blit(levelBuffers[int(scrolly / SCR_H)], (0, -(scrolly % SCR_H)))
+    screen.blit(levelBuffers[int(scrolly / SCR_H)+1], (0, -(scrolly % SCR_H) + SCR_H))
     
     for entity in entities:
         if entity.tile == "S":
